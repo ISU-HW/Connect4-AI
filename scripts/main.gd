@@ -1,8 +1,5 @@
 extends Node3D
 
-@onready var camera = $ControlCamera3D
-var current_hover: Area3D = null
-
 var _save_path_fullscreen_mode = "user://fullscreen_mode.save"
 var _toggle_fullscreen_action: StringName = "toggle_fullscreen"
 var _exit_app_action: StringName = "exit"
@@ -11,12 +8,8 @@ func _ready():
 	_initialize_input_system()
 	_apply_saved_display_settings()
 
-func _process(delta):
+func _process(_delta):
 	_process_input_actions()
-	_process_cursor_hover()
-
-func _input(event):
-	_handle_mouse_click(event)
 
 #region Input System
 func _initialize_input_system():
@@ -58,41 +51,4 @@ func _load_fullscreen_mode():
 
 func _apply_saved_display_settings():
 	_load_fullscreen_mode()
-#endregion
-
-#region Cursor Interaction
-func _process_cursor_hover():
-	var ray_params = _create_ray_query()
-	var result = get_world_3d().direct_space_state.intersect_ray(ray_params)
-	_handle_collision_result(result.get("collider") if result else null)
-
-func _create_ray_query() -> PhysicsRayQueryParameters3D:
-	var params = PhysicsRayQueryParameters3D.new()
-	var mouse_pos = get_viewport().get_mouse_position()
-	params.from = camera.project_ray_origin(mouse_pos)
-	params.to = params.from + camera.project_ray_normal(mouse_pos) * 1000
-	params.collide_with_areas = true
-	return params
-
-func _handle_collision_result(collider):
-	if collider is Area3D:
-		_update_hovered_target(collider)
-	else:
-		_clear_hovered_target()
-
-func _update_hovered_target(new_target: Area3D):
-	if new_target != current_hover:
-		_clear_hovered_target()
-		current_hover = new_target
-		current_hover.emit_signal("mouse_entered")
-
-func _clear_hovered_target():
-	if current_hover:
-		current_hover.emit_signal("mouse_exited")
-		current_hover = null
-
-func _handle_mouse_click(event: InputEvent):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if current_hover:
-			current_hover.emit_signal("mouse_clicked")
 #endregion

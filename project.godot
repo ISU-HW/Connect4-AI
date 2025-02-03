@@ -25,6 +25,11 @@ window/size/resizable=false
 
 project/assembly_name="Connect Four"
 
+[layer_names]
+
+3d_physics/layer_1="Scene"
+3d_physics/layer_2="MouseRayCast"
+
 [rendering]
 
 renderer/rendering_method.mobile="gl_compatibility"

@@ -1,0 +1,159 @@
+[gd_scene load_steps=17 format=3 uid="uid://bdulov8mmfx7y"]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_jf73m"]
+[ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
+[ext_resource type="ArrayMesh" uid="uid://gjdwe8rm01pw" path="res://assets/obj/connect4 tower.obj" id="3_nxnv2"]
+[ext_resource type="Curve" uid="uid://bukflrrc0ai1j" path="res://assets/tres/default_home_curve.tres" id="4_4xy7n"]
+[ext_resource type="ArrayMesh" uid="uid://ckrwwujy6roaq" path="res://assets/obj/round table.obj" id="4_p5dlg"]
+[ext_resource type="PackedScene" uid="uid://ljmcy4ce44ww" path="res://nodes/throw_column.tscn" id="5_dei7x"]
+[ext_resource type="Texture2D" uid="uid://crdtdwpeyo4nn" path="res://assets/png/wood_table_001_disp_1k.png" id="5_ke3cw"]
+[ext_resource type="Script" path="res://nodes/control_camera_3d.gd" id="7_iobgj"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tnvoq"]
+panorama = ExtResource("2_onqyp")
+
+[sub_resource type="Sky" id="Sky_dfjhw"]
+sky_material = SubResource("PanoramaSkyMaterial_tnvoq")
+
+[sub_resource type="Environment" id="Environment_awprq"]
+background_mode = 2
+sky = SubResource("Sky_dfjhw")
+sky_rotation = Vector3(0, 3.05433, 0)
+tonemap_mode = 2
+ssil_enabled = true
+ssil_intensity = 7.3
+glow_intensity = 8.0
+glow_strength = 1.05
+glow_bloom = 1.0
+glow_blend_mode = 0
+glow_hdr_threshold = 4.0
+glow_hdr_scale = 4.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kk3sf"]
+size = Vector3(240.769, 1, 8.7906)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8ywpd"]
+albedo_color = Color(0, 0, 0.784314, 1)
+rim_enabled = true
+rim = 0.1
+rim_tint = 1.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_h2snm"]
+line_spacing = 8.0
+font_size = 20
+outline_size = 4
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_nigs7"]
+albedo_color = Color(0.878431, 0.560784, 0.317647, 1)
+orm_texture = ExtResource("5_ke3cw")
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_nbp8c"]
+height = 0.001
+radius = 20.0
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_jf73m")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_awprq")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="WorldEnvironment"]
+transform = Transform3D(-0.883766, 0.204393, -0.42093, 0, 0.899558, 0.436802, 0.46793, 0.38603, -0.794998, 0, 10.786, -7.07533)
+light_energy = 1.5
+shadow_enabled = true
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 1.78814e-06, 13.8643, 7.40807)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(-1, 8.29037e-16, -8.74227e-08, -1.77636e-15, 1, 2.98023e-08, 8.74227e-08, 2.98023e-08, -1, 0, 9.89725, -22.8199)
+visible = false
+fov = 50.0
+
+[node name="ControlCamera3D" type="Camera3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.991228, 0.132164, 0, -0.132164, 0.991229, 0, 10, 15)
+current = true
+fov = 50.0
+script = ExtResource("7_iobgj")
+pivot_pos = Vector3(0, 8, 0)
+action_mouse_button = "RIGHT_BUTTON"
+rotation_speed = 1.5
+translation_speed = null
+zoom_speed = 3.0
+zoom_in = 15.0
+zoom_out = 25.0
+min_x_angle = -30.0
+max_x_angle = 50.0
+home_return_duration = null
+home_ease_curve = ExtResource("4_4xy7n")
+
+[node name="Board" type="StaticBody3D" parent="."]
+transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, -6.9023, -0.0431193, -2.42816)
+
+[node name="stopline" type="CollisionShape3D" parent="Board"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138.466, 57.6592, 50.9068)
+shape = SubResource("BoxShape3D_kk3sf")
+
+[node name="Tower" type="MeshInstance3D" parent="Board"]
+mesh = ExtResource("3_nxnv2")
+surface_material_override/0 = SubResource("StandardMaterial3D_8ywpd")
+
+[node name="ThrowColumn1" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.5, 155.055, 50.8)
+
+[node name="ThrowColumn2" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.3749, 155.055, 50.8)
+
+[node name="ThrowColumn3" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 103.25, 155.055, 50.8)
+
+[node name="ThrowColumn4" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 138.125, 155.055, 50.8)
+
+[node name="ThrowColumn5" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 173, 155.055, 50.8)
+
+[node name="ThrowColumn6" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 207.875, 155.055, 50.8)
+
+[node name="ThrowColumn7" parent="Board" instance=ExtResource("5_dei7x")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 242.75, 155.055, 50.8)
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MarginContainer" type="MarginContainer" parent="Control"]
+layout_mode = 0
+offset_left = 8.0
+offset_right = 282.0
+offset_bottom = 64.0
+
+[node name="Label" type="Label" parent="Control/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Esc — Exit
+Alt+Enter — Fullscreen
+RMB — Camera"
+label_settings = SubResource("LabelSettings_h2snm")
+uppercase = true
+max_lines_visible = 10
+
+[node name="Table" type="StaticBody3D" parent="."]
+collision_mask = 3
+
+[node name="Table" type="MeshInstance3D" parent="Table"]
+transform = Transform3D(14, 0, 0, 0, 14, 0, 0, 0, 14, -0.0174776, -20.096, 0.000990204)
+mesh = ExtResource("4_p5dlg")
+skeleton = NodePath("../..")
+surface_material_override/0 = SubResource("ORMMaterial3D_nigs7")
+surface_material_override/1 = SubResource("ORMMaterial3D_nigs7")
+surface_material_override/2 = SubResource("ORMMaterial3D_nigs7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Table"]
+shape = SubResource("CylinderShape3D_nbp8c")

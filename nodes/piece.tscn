@@ -1,13 +1,42 @@
-[gd_scene load_steps=5 format=3 uid="uid://dnh214qltuh3l"]
+[gd_scene load_steps=6 format=3 uid="uid://dnh214qltuh3l"]
 
 [ext_resource type="ArrayMesh" uid="uid://uh7x1ulikhhp" path="res://assets/obj/piece.obj" id="1_mnbui"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_okij4"]
-bounce = 0.2
+bounce = 0.25
+
+[sub_resource type="GDScript" id="GDScript_ipypf"]
+script/source = "extends RigidBody3D
+
+func setup(config: SpawnConfig):
+#region Root Rotation
+	self.rotation_degrees = config.root_rotation
+#endregion
+#region Model Color
+	var model_color = config.model_color
+	var mesh = get_node(\"Piece\")
+	var material = mesh.get_active_material(0).duplicate()
+	material.albedo_color = model_color
+	mesh.set_surface_override_material(0, material)
+#endregion	
+
+func _ready():
+	var timer = get_tree().create_timer(5.0, false, true)
+	timer.timeout.connect(
+		func():
+			print(\"Timeout!\")
+	)
+	await get_tree().create_timer(0.1).timeout
+	while timer.get_time_left() != 0.0:
+		await get_tree().physics_frame
+		if snapped(self.linear_velocity.y, 0.001) == 0.0:
+			break
+	self.freeze = true
+	print(\"Freeze!\")
+"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fw3f0"]
 resource_local_to_scene = true
-albedo_color = Color(0.7, 0, 0, 1)
 roughness = 0.6
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_ts521"]
@@ -20,8 +49,12 @@ axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
-mass = 0.08
+mass = 0.5
 physics_material_override = SubResource("PhysicsMaterial_okij4")
+gravity_scale = 2.0
+freeze_mode = 1
+continuous_cd = true
+script = SubResource("GDScript_ipypf")
 
 [node name="Piece" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
