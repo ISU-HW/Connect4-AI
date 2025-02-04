@@ -16,11 +16,11 @@ panorama = ExtResource("2_onqyp")
 sky_material = SubResource("PanoramaSkyMaterial_tnvoq")
 
 [sub_resource type="Environment" id="Environment_awprq"]
-background_mode = 2
+background_mode = 1
+background_color = Color(0.294118, 0.521569, 0.243137, 1)
+background_energy_multiplier = 1.5
 sky = SubResource("Sky_dfjhw")
 sky_rotation = Vector3(0, 3.05433, 0)
-tonemap_mode = 2
-ssil_enabled = true
 ssil_intensity = 7.3
 glow_intensity = 8.0
 glow_strength = 1.05
@@ -62,13 +62,24 @@ script = ExtResource("1_jf73m")
 environment = SubResource("Environment_awprq")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="WorldEnvironment"]
-transform = Transform3D(-1, 2.99003e-08, -8.21505e-08, -2.26267e-08, 0.819152, 0.573576, 8.44439e-08, 0.573576, -0.819152, 0, 10, -8.282)
+transform = Transform3D(-0.939889, 0.195864, -0.279723, -8.37791e-09, 0.819152, 0.573576, 0.341479, 0.539098, -0.769912, 0, 10, -8.282)
 light_energy = 1.5
 shadow_enabled = true
-shadow_blur = 3.0
 
 [node name="DirectionalLight3D2" type="DirectionalLight3D" parent="WorldEnvironment"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 1.78814e-06, 13.8643, 7.40807)
+
+[node name="SpotLight3D" type="SpotLight3D" parent="WorldEnvironment"]
+transform = Transform3D(0.92523, -0.189704, 0.328577, -0.36948, -0.647326, 0.666674, 0.0862254, -0.738229, -0.669016, 10, 15.749, -11.254)
+
+[node name="SpotLight3D2" type="SpotLight3D" parent="WorldEnvironment"]
+transform = Transform3D(0.157823, -0.75054, -0.641702, -0.369353, -0.647544, 0.666532, -0.91579, 0.13182, -0.379411, -10, 15.749, -11.254)
+
+[node name="SpotLight3D3" type="SpotLight3D" parent="WorldEnvironment"]
+transform = Transform3D(0.323078, -0.379077, -0.867134, -0.430966, -0.874683, 0.221807, -0.842549, 0.302044, -0.44596, -10, 9.417, -5)
+
+[node name="SpotLight3D4" type="SpotLight3D" parent="WorldEnvironment"]
+transform = Transform3D(0.497133, -0.0250076, 0.867314, -0.430534, -0.874961, 0.221548, 0.753325, -0.483547, -0.445739, 10, 9.417, -5.538)
 
 [node name="ControlCamera3D" type="Camera3D" parent="."]
 unique_name_in_owner = true
@@ -160,6 +171,7 @@ max_lines_visible = 10
 
 [node name="Table" type="MeshInstance3D" parent="."]
 transform = Transform3D(14, 0, 0, 0, 14, 0, 0, 0, 14, 0, -20.096, 0)
+visible = false
 mesh = ExtResource("4_p5dlg")
 surface_material_override/0 = SubResource("ORMMaterial3D_nigs7")
 surface_material_override/1 = SubResource("ORMMaterial3D_nigs7")

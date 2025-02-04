@@ -2,6 +2,6 @@
 
 [resource]
 resource_name = "Material.017"
-metallic = 0.6
-roughness = 0.75
+metallic = 0.7
+roughness = 0.3
 refraction_scale = 0.39

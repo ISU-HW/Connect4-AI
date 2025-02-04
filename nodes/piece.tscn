@@ -5,6 +5,7 @@
 [ext_resource type="AudioStream" uid="uid://b0mbt3agsc7y1" path="res://assets/wav/drop_piece.wav" id="2_mv6ln"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_okij4"]
+friction = 2.0
 bounce = 0.2
 
 [sub_resource type="GDScript" id="GDScript_ipypf"]
@@ -126,15 +127,16 @@ axis_lock_linear_x = true
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
-mass = 0.05
+mass = 0.1
 physics_material_override = SubResource("PhysicsMaterial_okij4")
+gravity_scale = 3.0
 continuous_cd = true
-angular_velocity = Vector3(0, 0, 1.74533)
+angular_velocity = Vector3(0, 0, 0.872665)
 script = SubResource("GDScript_ipypf")
 
 [node name="Chip" type="MeshInstance3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(70, 0, 0, 0, 70, 0, 0, 0, 18.184, 0, 0, 0)
+transform = Transform3D(70, 0, 0, 0, 70, 0, 0, 0, 23, 0, 0, 0)
 mesh = SubResource("ArrayMesh_qn25k")
 skeleton = NodePath("")
 
