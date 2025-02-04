@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://ugueey74dy0j"
-path="res://.godot/imported/coins.fbx-c96e7c275301343bc422a772699bd222.scn"
+uid="uid://b52v7uc5wm3uf"
+path="res://.godot/imported/gold_coin.fbx-de055609638d2dd9b936a7c36ab60170.scn"
 
 [deps]
 
-source_file="res://assets/coins.fbx"
-dest_files=["res://.godot/imported/coins.fbx-c96e7c275301343bc422a772699bd222.scn"]
+source_file="res://addons/gold_coin.fbx"
+dest_files=["res://.godot/imported/gold_coin.fbx-de055609638d2dd9b936a7c36ab60170.scn"]
 
 [params]
 

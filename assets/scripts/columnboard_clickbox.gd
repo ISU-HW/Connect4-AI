@@ -10,7 +10,7 @@ signal mouse_exited_area()
 
 func _ready():
 	input_event.connect(_on_input_event)
-	connect4.piece_dropped.connect(_on_piece_dropped)
+	connect4.chip_dropped.connect(_on_piece_dropped)
 	input_ray_pickable = true
 	
 	if track_mouse_hover:
@@ -35,7 +35,7 @@ func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _norm
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			print("Column", self.column, " clicked!")
 			clicked.emit()
-			connect4.drop_piece(column)
+			connect4.drop_chip(column)
 
 func _on_mouse_entered():
 	

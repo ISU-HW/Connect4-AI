@@ -1,10 +1,10 @@
 class_name Connect4
 extends Node
 
-signal piece_dropped
+signal chip_dropped
 signal not_valid_move
 
-var drop_piece_timer: Timer = Timer.new()
+var drop_chip_timer: Timer = Timer.new()
 enum CellState { EMPTY = 0, PLAYER1 = 1, PLAYER2 = 2 }
 
 const rows: int = 6
@@ -14,10 +14,10 @@ var current_player: int = CellState.PLAYER1
 var is_winner: int = 0
 
 func _ready():
-	drop_piece_timer.one_shot = true
-	drop_piece_timer.autostart = true
-	drop_piece_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	add_child(drop_piece_timer)
+	drop_chip_timer.one_shot = true
+	drop_chip_timer.autostart = true
+	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
+	add_child(drop_chip_timer)
 	initialize_board()
 
 func initialize_board():
@@ -28,17 +28,17 @@ func initialize_board():
 			board[row].append(CellState.EMPTY)
 
 func is_valid_move(col):
-	return drop_piece_timer.time_left == 0 and is_winner == 0 and board[0][col] == CellState.EMPTY
+	return drop_chip_timer.time_left == 0 and is_winner == 0 and board[0][col] == CellState.EMPTY
 
-func drop_piece(col):
+func drop_chip(col):
 	if not is_valid_move(col):
 		not_valid_move.emit()
 		return false
 
 	for row in range(rows - 1, -1, -1):
 		if board[row][col] == CellState.EMPTY:
-			drop_piece_timer.start()
-			piece_dropped.emit(row, col, current_player)
+			drop_chip_timer.start()
+			chip_dropped.emit(row, col, current_player)
 			board[row][col] = current_player
 			if _check_win(row, col):
 				is_winner = current_player
