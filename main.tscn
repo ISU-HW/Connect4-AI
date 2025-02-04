@@ -2,8 +2,8 @@
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
-[ext_resource type="ArrayMesh" uid="uid://gjdwe8rm01pw" path="res://assets/obj/connect4 tower.obj" id="3_nxnv2"]
-[ext_resource type="ArrayMesh" uid="uid://ckrwwujy6roaq" path="res://assets/obj/round table.obj" id="4_p5dlg"]
+[ext_resource type="ArrayMesh" uid="uid://gjdwe8rm01pw" path="res://assets/models/connect4 tower.obj" id="3_nxnv2"]
+[ext_resource type="ArrayMesh" uid="uid://ckrwwujy6roaq" path="res://assets/models/round table.obj" id="4_p5dlg"]
 [ext_resource type="PackedScene" uid="uid://ljmcy4ce44ww" path="res://nodes/throw_column.tscn" id="5_dei7x"]
 [ext_resource type="Texture2D" uid="uid://crdtdwpeyo4nn" path="res://assets/png/wood_table_001_disp_1k.png" id="5_ke3cw"]
 [ext_resource type="PackedScene" uid="uid://cggqb75a8w8r" path="res://addons/debug_menu/debug_menu.tscn" id="6_fliiy"]

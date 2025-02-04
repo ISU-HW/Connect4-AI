@@ -1,0 +1,22 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://gjdwe8rm01pw"
+path="res://.godot/imported/connect4 tower.obj-8ae9a3b72df3ce0c0d41cff0db4f791d.mesh"
+
+[deps]
+
+files=["res://.godot/imported/connect4 tower.obj-8ae9a3b72df3ce0c0d41cff0db4f791d.mesh"]
+
+source_file="res://assets/models/connect4 tower.obj"
+dest_files=["res://.godot/imported/connect4 tower.obj-8ae9a3b72df3ce0c0d41cff0db4f791d.mesh", "res://.godot/imported/connect4 tower.obj-8ae9a3b72df3ce0c0d41cff0db4f791d.mesh"]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+optimize_mesh=true
+force_disable_mesh_compression=false
