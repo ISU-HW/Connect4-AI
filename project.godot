@@ -17,8 +17,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-connect4="*res://scripts/connect4.gd"
-Mousehandler="res://scripts/mousehandler.gd"
+connect4="*res://assets/scripts/connect4.gd"
+Mousehandler="res://assets/scripts/mousehandler.gd"
 
 [display]
 
