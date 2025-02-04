@@ -7,10 +7,10 @@ signal mouse_exited_area()
 
 @export var track_mouse_hover: bool = true
 @export var column: int = 0
-@onready var board = $"/root/Main/Board"
 
 func _ready():
 	input_event.connect(_on_input_event)
+	connect4.piece_dropped.connect(_on_piece_dropped)
 	input_ray_pickable = true
 	
 	if track_mouse_hover:
@@ -35,7 +35,7 @@ func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _norm
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			print("Column", self.column, " clicked!")
 			clicked.emit()
-			board.drop_piece(column)
+			connect4.drop_piece(column)
 
 func _on_mouse_entered():
 	
@@ -44,6 +44,6 @@ func _on_mouse_entered():
 func _on_mouse_exited():
 	mouse_exited_area.emit()
 
-func _on_board_piece_dropped(row, col, current_player):
+func _on_piece_dropped(row, col, current_player):
 	if col == self.column:
 		$Spawnpoint.spawn_by_index_variants(current_player - 1)
