@@ -1,13 +1,15 @@
-[gd_scene load_steps=18 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=25 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
 [ext_resource type="ArrayMesh" uid="uid://gjdwe8rm01pw" path="res://assets/models/connect4 tower.obj" id="3_nxnv2"]
+[ext_resource type="Material" uid="uid://bb43ngplsfis2" path="res://addons/flexible_toon_shader/FlexibleToonMaterial.tres" id="4_ovdtc"]
 [ext_resource type="ArrayMesh" uid="uid://ckrwwujy6roaq" path="res://assets/models/round table.obj" id="4_p5dlg"]
 [ext_resource type="PackedScene" uid="uid://ljmcy4ce44ww" path="res://nodes/throw_column.tscn" id="5_dei7x"]
 [ext_resource type="Texture2D" uid="uid://crdtdwpeyo4nn" path="res://assets/png/wood_table_001_disp_1k.png" id="5_ke3cw"]
 [ext_resource type="PackedScene" uid="uid://cggqb75a8w8r" path="res://addons/debug_menu/debug_menu.tscn" id="6_fliiy"]
 [ext_resource type="Script" path="res://assets/scripts/control_camera_3d.gd" id="7_iobgj"]
+[ext_resource type="PackedScene" uid="uid://dnh214qltuh3l" path="res://nodes/chip.tscn" id="8_c4b2j"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tnvoq"]
 panorama = ExtResource("2_onqyp")
@@ -16,7 +18,7 @@ panorama = ExtResource("2_onqyp")
 sky_material = SubResource("PanoramaSkyMaterial_tnvoq")
 
 [sub_resource type="Environment" id="Environment_awprq"]
-background_mode = 1
+background_mode = 2
 background_color = Color(0.294118, 0.521569, 0.243137, 1)
 background_energy_multiplier = 1.5
 sky = SubResource("Sky_dfjhw")
@@ -29,31 +31,124 @@ glow_blend_mode = 0
 glow_hdr_threshold = 4.0
 glow_hdr_scale = 4.0
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6ifjb"]
+bounce = 0.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ob2yj"]
+size = Vector3(12, 1, 2)
+
+[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_nigs7"]
+albedo_color = Color(0.878431, 0.560784, 0.317647, 1)
+orm_texture = ExtResource("5_ke3cw")
+uv1_scale = Vector3(0.5, 0.5, 0.5)
+
 [sub_resource type="Curve" id="Curve_xnlx3"]
 _data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(1, 1), 1.4, 0.0, 0, 0]
 point_count = 2
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6ifjb"]
-bounce = 0.3
+[sub_resource type="GDScript" id="GDScript_ii5ql"]
+script/source = "extends Control
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_kk3sf"]
-size = Vector3(12, 0, 2)
+@export var fade_duration: float = 0.2
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8ywpd"]
-albedo_color = Color(0, 0, 0.784314, 1)
-rim_enabled = true
-rim = 0.1
-rim_tint = 1.0
+func _ready():
+	connect4.win.connect(fade_out)
+	
+func fade_out() -> void:
+	var tween = create_tween()
+	tween.tween_property(self, \"modulate:a\", 0.0, fade_duration)
+	tween.finished.connect(_on_fade_finished)
+
+func _on_fade_finished() -> void:
+	visible = false
+	modulate.a = 1.0
+"
 
 [sub_resource type="LabelSettings" id="LabelSettings_h2snm"]
 line_spacing = 8.0
 font_size = 18
 outline_color = Color(0, 0, 0, 1)
 
-[sub_resource type="ORMMaterial3D" id="ORMMaterial3D_nigs7"]
-albedo_color = Color(0.878431, 0.560784, 0.317647, 1)
-orm_texture = ExtResource("5_ke3cw")
-uv1_scale = Vector3(0.5, 0.5, 0.5)
+[sub_resource type="GDScript" id="GDScript_b86cp"]
+script/source = "extends Control
+
+@export var fade_duration: float = 1.0
+
+func _ready():
+	connect4.win.connect(fade_in)
+	self.visible = false
+	
+func fade_in() -> void:
+	var tween = create_tween()
+	tween.tween_property(self, \"modulate:a\", 1.0, fade_duration)
+	tween.finished.connect(_on_fade_finished)
+
+func _on_fade_finished() -> void:
+	visible = true
+"
+
+[sub_resource type="GDScript" id="GDScript_l7nte"]
+script/source = "extends RigidBody3D
+
+var PLAYER1_COLOR = connect4.spawnconfig_player1.model_color
+var PLAYER2_COLOR = connect4.spawnconfig_player2.model_color
+
+func _ready() -> void:
+	$win.visible = true
+	connect4.win.connect(_on_win)
+	connect4.draw.connect(_on_draw)
+	
+func _process(_delta) -> void:
+	self.rotate_y(0.01)
+	
+func _on_win():
+	var model_color = PLAYER1_COLOR if (connect4.get_current_player() == connect4.PlayerState.PLAYER1) else PLAYER2_COLOR
+	var mesh = $Chip
+	var material = mesh.get_active_material(0).duplicate()
+	if material is StandardMaterial3D or material is ORMMaterial3D:
+		material.albedo_color = model_color
+	elif material is ShaderMaterial:
+		material.set_shader_parameter('albedo', model_color)
+	for n in mesh.get_surface_override_material_count():
+		mesh.set_surface_override_material(n, material)
+		
+	self.visible = true
+
+func _on_draw():
+	self.visible = true
+"
+
+[sub_resource type="Environment" id="Environment_2cm4a"]
+glow_enabled = true
+glow_intensity = 2.0
+glow_strength = 1.27
+glow_blend_mode = 4
+adjustment_enabled = true
+adjustment_brightness = 0.8
+
+[sub_resource type="LabelSettings" id="LabelSettings_17xiu"]
+font_size = 30
+
+[sub_resource type="GDScript" id="GDScript_8rw8j"]
+script/source = "extends Label
+
+func _ready() -> void:
+	connect4.win.connect(_on_end)
+	connect4.draw.connect(_on_end)
+	
+func _on_end():
+	var player = connect4.get_current_player()
+	match player:
+		connect4.PlayerState.PLAYER1:
+			self.text = \"Player 1 wins!\"
+			self.add_theme_color_override(\"font_color\", connect4.spawnconfig_player1.model_color)
+		connect4.PlayerState.PLAYER2:
+			self.text = \"Player 2 wins!\"
+			self.add_theme_color_override(\"font_color\", connect4.spawnconfig_player2.model_color)
+		connect4.PlayerState.EMPTY:
+			self.text = \"It's a draw!\"
+			self.add_theme_color_override(\"font_color\", Color.LIGHT_GRAY)
+"
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_jf73m")
@@ -62,53 +157,44 @@ script = ExtResource("1_jf73m")
 environment = SubResource("Environment_awprq")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="WorldEnvironment"]
-transform = Transform3D(-0.939889, 0.195864, -0.279723, -8.37791e-09, 0.819152, 0.573576, 0.341479, 0.539098, -0.769912, 0, 10, -8.282)
+transform = Transform3D(-0.939889, 0.195864, -0.279723, 0.0610865, 0.902377, 0.426596, 0.335971, 0.383866, -0.860099, 0, 10, -8.282)
 light_energy = 1.5
 shadow_enabled = true
 
 [node name="DirectionalLight3D2" type="DirectionalLight3D" parent="WorldEnvironment"]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 1.78814e-06, 13.8643, 7.40807)
+visible = false
 
 [node name="SpotLight3D" type="SpotLight3D" parent="WorldEnvironment"]
 transform = Transform3D(0.92523, -0.189704, 0.328577, -0.36948, -0.647326, 0.666674, 0.0862254, -0.738229, -0.669016, 10, 15.749, -11.254)
+visible = false
 
 [node name="SpotLight3D2" type="SpotLight3D" parent="WorldEnvironment"]
 transform = Transform3D(0.157823, -0.75054, -0.641702, -0.369353, -0.647544, 0.666532, -0.91579, 0.13182, -0.379411, -10, 15.749, -11.254)
+visible = false
 
 [node name="SpotLight3D3" type="SpotLight3D" parent="WorldEnvironment"]
 transform = Transform3D(0.323078, -0.379077, -0.867134, -0.430966, -0.874683, 0.221807, -0.842549, 0.302044, -0.44596, -10, 9.417, -5)
+visible = false
 
 [node name="SpotLight3D4" type="SpotLight3D" parent="WorldEnvironment"]
 transform = Transform3D(0.497133, -0.0250076, 0.867314, -0.430534, -0.874961, 0.221548, 0.753325, -0.483547, -0.445739, 10, 9.417, -5.538)
-
-[node name="ControlCamera3D" type="Camera3D" parent="."]
-unique_name_in_owner = true
-transform = Transform3D(-1, 1.15541e-08, -8.66559e-08, 0, 0.991228, 0.132164, 8.74228e-08, 0.132164, -0.991228, 0, 10, -15)
-current = true
-fov = 50.0
-script = ExtResource("7_iobgj")
-pivot_pos = Vector3(0, 8, 0)
-rotation_speed = 1.5
-zoom_speed = 3.0
-zoom_in = 15.0
-zoom_out = 30.0
-min_x_angle = -30.0
-max_x_angle = 45.0
-home_ease_curve = SubResource("Curve_xnlx3")
+visible = false
 
 [node name="Board" type="StaticBody3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.9023, -0.0431193, -2.42816)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.902, 0, -2.602)
 physics_material_override = SubResource("PhysicsMaterial_6ifjb")
 
 [node name="stopline" type="CollisionShape3D" parent="Board"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.923, 2.88281, 2.545)
-shape = SubResource("BoxShape3D_kk3sf")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.923, 2.383, 2.545)
+shape = SubResource("BoxShape3D_ob2yj")
 
 [node name="Tower" type="MeshInstance3D" parent="Board"]
 transform = Transform3D(0.05, 0, 0, 0, 0.05, 0, 0, 0, 0.05, 0, 0, 0)
+material_override = ExtResource("4_ovdtc")
 mesh = ExtResource("3_nxnv2")
-surface_material_override/0 = SubResource("StandardMaterial3D_8ywpd")
+surface_material_override/0 = ExtResource("4_ovdtc")
 
 [node name="ThrowColumn1" parent="Board" instance=ExtResource("5_dei7x")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.668, 7.753, 2.54)
@@ -137,29 +223,46 @@ column = 5
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.145, 7.753, 2.54)
 column = 6
 
-[node name="DropPieceCooldown" type="Timer" parent="Board"]
-unique_name_in_owner = true
-process_callback = 0
-one_shot = true
+[node name="Table" type="MeshInstance3D" parent="."]
+transform = Transform3D(14, 0, 0, 0, 14, 0, 0, 0, 14, 0, -20.096, 0)
+mesh = ExtResource("4_p5dlg")
+surface_material_override/0 = SubResource("ORMMaterial3D_nigs7")
+surface_material_override/1 = SubResource("ORMMaterial3D_nigs7")
+surface_material_override/2 = SubResource("ORMMaterial3D_nigs7")
 
-[node name="Control" type="Control" parent="."]
+[node name="ControlCamera3D" type="Camera3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-1, 1.15541e-08, -8.66559e-08, 0, 0.991228, 0.132164, 8.74228e-08, 0.132164, -0.991228, 0, 10, -15)
+current = true
+fov = 55.0
+script = ExtResource("7_iobgj")
+pivot_pos = Vector3(0, 8, 0)
+rotation_speed = 1.5
+zoom_speed = 3.0
+zoom_in = 15.0
+zoom_out = 30.0
+min_x_angle = -30.0
+max_x_angle = 45.0
+home_ease_curve = SubResource("Curve_xnlx3")
+
+[node name="help" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+script = SubResource("GDScript_ii5ql")
 
-[node name="CanvasLayer" parent="Control" instance=ExtResource("6_fliiy")]
-
-[node name="MarginContainer" type="MarginContainer" parent="Control"]
+[node name="MarginContainer" type="MarginContainer" parent="help"]
 layout_mode = 0
 offset_right = 250.0
 offset_bottom = 160.0
 
-[node name="ColorRect" type="ColorRect" parent="Control/MarginContainer"]
+[node name="ColorRect" type="ColorRect" parent="help/MarginContainer"]
+process_mode = 4
 layout_mode = 2
 color = Color(0, 0, 0, 0.588235)
 
-[node name="Label" type="Label" parent="Control/MarginContainer"]
+[node name="Label" type="Label" parent="help/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Esc — Exit
@@ -169,10 +272,78 @@ Space — Home"
 label_settings = SubResource("LabelSettings_h2snm")
 max_lines_visible = 10
 
-[node name="Table" type="MeshInstance3D" parent="."]
-transform = Transform3D(14, 0, 0, 0, 14, 0, 0, 0, 14, 0, -20.096, 0)
-visible = false
-mesh = ExtResource("4_p5dlg")
-surface_material_override/0 = SubResource("ORMMaterial3D_nigs7")
-surface_material_override/1 = SubResource("ORMMaterial3D_nigs7")
-surface_material_override/2 = SubResource("ORMMaterial3D_nigs7")
+[node name="win_menu" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_b86cp")
+
+[node name="ColorRect" type="ColorRect" parent="win_menu"]
+custom_minimum_size = Vector2(1200, 700)
+layout_mode = 2
+offset_left = -24.0
+offset_top = -26.0
+offset_right = 1176.0
+offset_bottom = 674.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.392157)
+
+[node name="AspectRatioContainer" type="AspectRatioContainer" parent="win_menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -226.0
+offset_top = -323.0
+offset_right = 226.0
+offset_bottom = 325.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Winner" type="SubViewportContainer" parent="win_menu/AspectRatioContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+
+[node name="SubViewport" type="SubViewport" parent="win_menu/AspectRatioContainer/Winner"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(256, 256)
+render_target_update_mode = 4
+
+[node name="Piece" parent="win_menu/AspectRatioContainer/Winner/SubViewport" instance=ExtResource("8_c4b2j")]
+transform = Transform3D(-0.766044, 0.277739, 0.579687, 0, 0.901833, -0.432086, -0.642788, -0.330997, -0.690844, 0, 13, -3.297)
+axis_lock_linear_y = true
+gravity_scale = 0.0
+script = SubResource("GDScript_l7nte")
+
+[node name="Camera3D" type="Camera3D" parent="win_menu/AspectRatioContainer/Winner/SubViewport"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 13, -6.17877)
+environment = SubResource("Environment_2cm4a")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="win_menu/AspectRatioContainer/Winner/SubViewport"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 2, 13, -6)
+light_energy = 10.0
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="win_menu/AspectRatioContainer/Winner/SubViewport"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -2, 13, -6)
+light_energy = 10.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="win_menu/AspectRatioContainer/Winner/SubViewport"]
+transform = Transform3D(-1, 7.57103e-08, -4.37114e-08, 0, 0.5, 0.866025, 8.74228e-08, 0.866025, -0.5, 0, 0, 0)
+
+[node name="player wins" type="Label" parent="win_menu/AspectRatioContainer"]
+layout_mode = 2
+text = "Who's wins?"
+label_settings = SubResource("LabelSettings_17xiu")
+horizontal_alignment = 1
+script = SubResource("GDScript_8rw8j")
+
+[node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]

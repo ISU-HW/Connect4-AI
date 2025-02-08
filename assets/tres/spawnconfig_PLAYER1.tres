@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SpawnConfig" load_steps=3 format=3 uid="uid://bu6myuscb43x1"]
+
+[ext_resource type="PackedScene" uid="uid://dnh214qltuh3l" path="res://nodes/chip.tscn" id="1_lj0wj"]
+[ext_resource type="Script" path="res://assets/scripts/spawnconfig.gd" id="2_q1y6c"]
+
+[resource]
+script = ExtResource("2_q1y6c")
+scene = ExtResource("1_lj0wj")
+root_rotation = Vector3(0, 0, 0)
+model_color = Color(0.886275, 0.839216, 0, 1)
