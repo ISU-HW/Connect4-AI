@@ -1,8 +1,11 @@
 extends Node3D
 
+signal game_restart
+
 var _save_path_fullscreen_mode = "user://fullscreen_mode.save"
 var _toggle_fullscreen_action: StringName = "toggle_fullscreen"
 var _exit_app_action: StringName = "exit"
+var _restart_game_action:StringName = "reload_game"
 
 func _ready():
 	_initialize_input_system()
@@ -15,6 +18,7 @@ func _process(_delta):
 func _initialize_input_system():
 	_setup_action(_toggle_fullscreen_action, Key.KEY_ENTER, true)
 	_setup_action(_exit_app_action, Key.KEY_ESCAPE)
+	_setup_action(_restart_game_action, Key.KEY_R)
 	_load_fullscreen_mode()
 
 func _setup_action(action: StringName, key: Key, alt: bool = false):
@@ -31,6 +35,9 @@ func _process_input_actions():
 	
 	if Input.is_action_just_pressed(_exit_app_action):
 		get_tree().quit()
+		
+	if Input.is_action_just_pressed(_restart_game_action):
+		game_restart.emit()
 #endregion
 
 #region Display Management

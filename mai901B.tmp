@@ -123,11 +123,7 @@ func _ready() -> void:
 
 func _on_end():
 	self.text = self.text.format({
-		\"winrate\": snappedf(100.0*connect4.wins/(connect4.wins + connect4.losses + connect4.draws), 0.1),
-		\"wins\": connect4.wins,
-		\"losses\": connect4.losses,
-		\"draws\": connect4.draws,
-		\"games\": connect4.wins + connect4.losses + connect4.draws,
+		\"winrate\": 100.0*connect4.wins/(connect4.wins + connect4.losses + connect4.draws)
 	})
 "
 
@@ -138,17 +134,8 @@ line_spacing = 5.0
 script/source = "extends Label
 
 func _ready() -> void:
-	connect4.win.connect(_on_end)
-	connect4.draw.connect(_on_end)
-
-func _on_end():
-	self.text = self.text.format({
-		\"winrate\": snappedf(100.0*connect4.losses/(connect4.wins + connect4.losses + connect4.draws), 0.1),
-		\"wins\": connect4.losses,
-		\"losses\": connect4.wins,
-		\"draws\": connect4.draws,
-		\"games\": connect4.wins + connect4.losses + connect4.draws,
-	})
+	connect4.win.connect(_format_label)
+	connect4.draw.connect(_format_label)
 "
 
 [sub_resource type="GDScript" id="GDScript_l7nte"]
@@ -397,12 +384,13 @@ custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Your stats
-Winrate — %{winrate}
+Winrate — %{winrate}*.0f
 Wins — {wins}
-Losses — {losses}
+Loses — {losses}
 Draws — {draws}  
 Games — {games}"
 label_settings = SubResource("LabelSettings_s07vk")
+horizontal_alignment = 2
 script = SubResource("GDScript_yd5fm")
 
 [node name="AI stats" type="Label" parent="win_menu/CenterContainer/VBoxContainer/HSplitContainer"]
@@ -410,14 +398,14 @@ custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 8
 text = "AI stats
-{winrate}% — Winrate
-{wins} — Wins
-{losses} — Losses
-{draws} — Draws
-{games} — Games"
+{0}.0f% — Winrate
+{1} — Wins
+{2} — Loses
+{3} — Draws
+{4} — Games"
 label_settings = SubResource("LabelSettings_8e80f")
-horizontal_alignment = 2
 script = SubResource("GDScript_gy4i6")
+expressions = {}
 
 [node name="Winner\'s chip" type="SubViewportContainer" parent="win_menu/CenterContainer/VBoxContainer"]
 layout_mode = 2

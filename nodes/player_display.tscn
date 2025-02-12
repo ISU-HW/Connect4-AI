@@ -1,0 +1,137 @@
+[gd_scene load_steps=9 format=3 uid="uid://cycny62yykefs"]
+
+[ext_resource type="Shader" path="res://assets/shaders/hue.gdshader" id="1_kv7h3"]
+[ext_resource type="Texture2D" uid="uid://chofco3dg6wc5" path="res://assets/png/rounded_patch2.png" id="2_nphiy"]
+[ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="4_godv3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1pxvv"]
+shader = ExtResource("1_kv7h3")
+shader_parameter/from = Color(0, 0, 0, 1)
+shader_parameter/to = Color(0.382, 0.382, 0.382, 1)
+shader_parameter/alpha = 1.0
+shader_parameter/tolerance = null
+
+[sub_resource type="GDScript" id="GDScript_3p0nf"]
+script/source = "extends NinePatchRect
+
+@export var player: connect4.PlayerState
+@export var is_player_turn: bool = false
+
+@export_category(\"Settings\")
+@export var transition_duration: float = 0.2
+@export var fade_out_on: float = 0.8
+@export var shrink_size: Vector2
+@export var expand_size: Vector2
+@export var shrink_position_y: int
+@export var expand_position_y: int
+
+var PLAYER_COLORS = {
+	connect4.PlayerState.PLAYER1: connect4.spawnconfig_player1.model_color,
+	connect4.PlayerState.PLAYER2: connect4.spawnconfig_player2.model_color
+}
+
+@onready var label: Label = %Label
+
+func _ready() -> void:
+	connect4.turn_changed.connect(_on_turn_changed)
+	label.label_settings = label.label_settings.duplicate(true)
+	_apply_player_color()
+	_update()
+
+func _apply_player_color() -> void:
+	var new_material = get_material().duplicate()
+	if player in PLAYER_COLORS:
+		new_material.set_shader_parameter(\"to\", PLAYER_COLORS[player])
+		set_material(new_material)
+
+func _on_turn_changed() -> void:
+	_update_turn()
+	if connect4.drop_chip_timer.wait_time >= 0.5 and is_player_turn:
+		await connect4.drop_chip_timer.timeout
+	_update()
+
+func _update_turn() -> void:
+	is_player_turn = connect4.get_current_player() == player
+
+func _update() -> void:
+	var tween = create_tween()
+	var alpha = 1.0 if is_player_turn else fade_out_on
+	var size = expand_size if is_player_turn else shrink_size
+	var position_y = expand_position_y if is_player_turn else shrink_position_y
+
+	tween.tween_property(self, \"modulate:a\", alpha, transition_duration)
+	tween.tween_property(self.material, \"shader_parameter/alpha\", alpha, transition_duration)
+	tween.tween_property(self, \"custom_minimum_size\", size, transition_duration)
+	tween.tween_property(self, \"position:y\", position_y, transition_duration)
+"
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_fwube"]
+blend_mode = 2
+
+[sub_resource type="LabelSettings" id="LabelSettings_a10in"]
+line_spacing = 1.0
+font_size = 14
+
+[sub_resource type="GDScript" id="GDScript_pmxvm"]
+script/source = "extends Label
+
+func _ready() -> void:
+	var player_display = get_parent().get_parent().get_parent().player
+	self.text = self.text.format({
+		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and connect4.PlayerState.PLAYER1 == player_display or connect4.users[\"AI\"] == connect4.PlayerState.PLAYER1 and connect4.PlayerState.PLAYER1 == player_display else \"AI\"
+	})
+"
+
+[node name="player" type="NinePatchRect"]
+material = SubResource("ShaderMaterial_1pxvv")
+clip_contents = true
+custom_minimum_size = Vector2(200, 80)
+offset_right = 200.0
+offset_bottom = 70.0
+size_flags_horizontal = 4
+size_flags_vertical = 0
+texture = ExtResource("2_nphiy")
+region_rect = Rect2(0, 0, 251, 100)
+script = SubResource("GDScript_3p0nf")
+transition_duration = 0.1
+shrink_size = Vector2(200, 80)
+expand_size = Vector2(200, 80)
+shrink_position_y = -10
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -85.0
+offset_top = -55.0
+offset_right = 85.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+mouse_filter = 0
+dragger_visibility = 1
+
+[node name="Picture" type="TextureRect" parent="MarginContainer/HSplitContainer"]
+texture_filter = 4
+material = SubResource("CanvasItemMaterial_fwube")
+layout_mode = 2
+texture = ExtResource("4_godv3")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "{user_player}
+Turn"
+label_settings = SubResource("LabelSettings_a10in")
+vertical_alignment = 1
+text_overrun_behavior = 3
+uppercase = true
+script = SubResource("GDScript_pmxvm")

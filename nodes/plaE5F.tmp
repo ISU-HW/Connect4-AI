@@ -1,0 +1,147 @@
+[gd_scene load_steps=9 format=3 uid="uid://cycny62yykefs"]
+
+[ext_resource type="Shader" path="res://assets/shaders/hue.gdshader" id="1_kv7h3"]
+[ext_resource type="Texture2D" uid="uid://chofco3dg6wc5" path="res://assets/png/rounded_patch2.png" id="2_nphiy"]
+[ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="4_godv3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1pxvv"]
+shader = ExtResource("1_kv7h3")
+shader_parameter/from = Color(0, 0, 0, 1)
+shader_parameter/to = Color(0.382, 0.382, 0.382, 1)
+shader_parameter/alpha = 1.0
+shader_parameter/tolerance = null
+
+[sub_resource type="GDScript" id="GDScript_3p0nf"]
+script/source = "extends NinePatchRect
+
+@export var player: connect4.PlayerState
+@export var is_player_turn: bool = false
+@export_category(\"Settings\")
+@export var transition_duration: float = 0.2
+@export var fade_out_on: float = 0.8
+@export var shrink_size: Vector2
+@export var expand_size: Vector2
+@export var shrink_position_y: int
+@export var expand_position_y: int
+#@export var expand_font_size: int
+#@export var shrink_font_size: int
+
+var PLAYER1_COLOR = connect4.spawnconfig_player1.model_color
+var PLAYER2_COLOR = connect4.spawnconfig_player2.model_color
+
+@onready var label: Label = %Label
+
+func _ready() -> void:
+	connect4.turn_changed.connect(_on_turn_changed)
+	
+	label.label_settings = label.label_settings.duplicate(true)
+	
+	var new_material = self.get_material().duplicate()
+	if player == connect4.PlayerState.PLAYER1:
+		new_material.set_shader_parameter('to', PLAYER1_COLOR)
+		self.set_material(new_material)
+	elif player == connect4.PlayerState.PLAYER2:
+		new_material.set_shader_parameter('to', PLAYER2_COLOR)
+		self.set_material(new_material)
+	
+	_update()
+
+func _on_turn_changed():
+	_update_turn()
+	if is_player_turn:
+		await connect4.drop_chip_timer.timeout
+	_update()
+		
+func _update_turn():
+	if connect4.get_current_player() == player:
+		is_player_turn = true
+	else:
+		is_player_turn = false
+
+func _update():
+	var tween = create_tween()
+	if is_player_turn:
+		#tween.tween_property(label.label_settings, \"font_size\", expand_font_size, transition_duration)
+		tween.tween_property(self, \"modulate:a\", 1.0, transition_duration)
+		tween.tween_property(self.material, \"shader_parameter/alpha\", 1.0, transition_duration)
+		tween.tween_property(self, \"custom_minimum_size\", expand_size, transition_duration)
+		tween.tween_property(self, \"position/y\", expand_position_y, transition_duration)
+		
+	else:
+		#tween.tween_property(label.label_settings, \"font_size\", shrink_font_size, transition_duration)
+		tween.tween_property(self, \"modulate:a\", fade_out_on, transition_duration)
+		tween.tween_property(self.material, \"shader_parameter/alpha\", fade_out_on, transition_duration)
+		tween.tween_property(self, \"custom_minimum_size\", shrink_size, transition_duration)
+		tween.tween_property(self, \"position/y\", shrink_position_y, transition_duration)
+"
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_fwube"]
+blend_mode = 2
+
+[sub_resource type="LabelSettings" id="LabelSettings_a10in"]
+line_spacing = 1.0
+font_size = 14
+
+[sub_resource type="GDScript" id="GDScript_pmxvm"]
+script/source = "extends FormattedLabel
+
+@export var expressions: Array[String]
+
+func _ready() -> void:
+	connect4.start.connect(_format.bind(expressions, true, [get_parent().get_parent().get_parent().player]))
+"
+
+[node name="player" type="NinePatchRect"]
+material = SubResource("ShaderMaterial_1pxvv")
+clip_contents = true
+custom_minimum_size = Vector2(200, 80)
+offset_right = 200.0
+offset_bottom = 70.0
+size_flags_horizontal = 4
+size_flags_vertical = 0
+texture = ExtResource("2_nphiy")
+region_rect = Rect2(0, 0, 251, 100)
+script = SubResource("GDScript_3p0nf")
+transition_duration = 0.1
+shrink_size = Vector2(200, 80)
+expand_size = Vector2(200, 80)
+shrink_position_y = -10
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -85.0
+offset_top = -55.0
+offset_right = 85.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
+layout_mode = 2
+mouse_filter = 0
+dragger_visibility = 1
+
+[node name="Picture" type="TextureRect" parent="MarginContainer/HSplitContainer"]
+texture_filter = 4
+material = SubResource("CanvasItemMaterial_fwube")
+layout_mode = 2
+texture = ExtResource("4_godv3")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="Label" type="Label" parent="MarginContainer/HSplitContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "{0}
+Turn"
+label_settings = SubResource("LabelSettings_a10in")
+vertical_alignment = 1
+uppercase = true
+script = SubResource("GDScript_pmxvm")
+expressions = Array[String](["\"PLAYER\" if connect4.users[I] = player else \"AI\""])

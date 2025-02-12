@@ -13,6 +13,8 @@ func _ready():
 	connect4.chip_dropped.connect(_on_chip_dropped)
 	input_ray_pickable = true
 	
+	connect4.win.connect(_on_end)
+	connect4.draw.connect(_on_end)
 	if track_mouse_hover:
 		_connect_hover_signals()
 	else:
@@ -34,7 +36,7 @@ func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _norm
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			print("Column", self.column, " clicked!")
-			connect4.drop_chip(column)
+			connect4.drop_chip("I", column)
 			clicked.emit()
 
 func _on_mouse_entered():
@@ -46,3 +48,7 @@ func _on_mouse_exited():
 func _on_chip_dropped(board_position, current_player):
 	if board_position.y == self.column:
 		$Spawnpoint.spawn_by_index_variants(current_player - 1)
+
+func _on_end():
+	mouse_exited_area.emit()
+	_disconnect_hover_signals()

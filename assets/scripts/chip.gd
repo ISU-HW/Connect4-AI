@@ -50,5 +50,6 @@ func _physics_process(_delta):
 
 func _on_connect4_win():
 	if board_position in connect4.win_chips:
+		await get_tree().create_timer(1).timeout
 		$win.visible = true
 		$Chip.scale.y *= 2
