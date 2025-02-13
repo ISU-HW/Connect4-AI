@@ -75,10 +75,14 @@ font_size = 14
 [sub_resource type="GDScript" id="GDScript_pmxvm"]
 script/source = "extends Label
 
+@onready var player_display = get_parent().get_parent().player
+
 func _ready() -> void:
-	var player_display = get_parent().get_parent().get_parent().player
+	connect4.start.connect(_on_start)
+	
+func _on_start():
 	self.text = self.text.format({
-		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and connect4.PlayerState.PLAYER1 == player_display or connect4.users[\"AI\"] == connect4.PlayerState.PLAYER1 and connect4.PlayerState.PLAYER1 == player_display else \"AI\"
+		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI\"
 	})
 "
 
@@ -98,7 +102,7 @@ shrink_size = Vector2(200, 80)
 expand_size = Vector2(200, 80)
 shrink_position_y = -10
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="HSplitContainer" type="HSplitContainer" parent="."]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -106,18 +110,15 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -85.0
-offset_top = -55.0
+offset_top = -65.0
 offset_right = 85.0
 offset_bottom = -14.0
 grow_horizontal = 2
 grow_vertical = 0
-
-[node name="HSplitContainer" type="HSplitContainer" parent="MarginContainer"]
-layout_mode = 2
 mouse_filter = 0
 dragger_visibility = 1
 
-[node name="Picture" type="TextureRect" parent="MarginContainer/HSplitContainer"]
+[node name="Picture" type="TextureRect" parent="HSplitContainer"]
 texture_filter = 4
 material = SubResource("CanvasItemMaterial_fwube")
 layout_mode = 2
@@ -125,7 +126,7 @@ texture = ExtResource("4_godv3")
 expand_mode = 2
 stretch_mode = 4
 
-[node name="Label" type="Label" parent="MarginContainer/HSplitContainer"]
+[node name="Label" type="Label" parent="HSplitContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "{user_player}

@@ -271,12 +271,13 @@ var tween: Tween
 
 func _ready() -> void:
 	for button in choose_buttons:
-		button.pressed.connect(_on_choose.bind(int(button.player)))
+	print(int(button.name))
+		button.pressed.connect(_on_choose.bind(int(button.name)))
 		
 func _on_choose(player: connect4.PlayerState):
-	connect4.set_user_player(player)
 	zoom_out()
 	await tween.finished
+	connect4.set_user_player(player)
 	connect4.start.emit()
 	
 func zoom_out() -> void:
@@ -556,6 +557,8 @@ tooltip_text = "[R]"
 text = "Restart"
 script = SubResource("GDScript_x3p5e")
 
+[node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]
+
 [node name="choose_menu" type="CenterContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
@@ -568,6 +571,7 @@ grow_horizontal = 2
 grow_vertical = 2
 pivot_offset = Vector2(960, 540)
 script = SubResource("GDScript_7v000")
+transition_duration = null
 
 [node name="TextureRect" type="TextureRect" parent="choose_menu"]
 layout_mode = 2
@@ -622,5 +626,3 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "Choose color"
 label_settings = SubResource("LabelSettings_4u2jv")
-
-[node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]

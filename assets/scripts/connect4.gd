@@ -18,6 +18,7 @@ const rows: int = 6
 const cols: int = 7
 
 var drop_chip_cooldown = 0.3
+
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var board: Array = []
 var current_player: int = PlayerState.PLAYER1
@@ -34,39 +35,17 @@ func _ready():
 	#if user_choose != PlayerState.PLAYER1:
 		#users["PLAYER"] = PlayerState.PLAYER2
 		#users["AI"] = PlayerState.PLAYER1
-	initialize(0)
+	_initialize(0)
 	_connect_signals()
-
-func initialize(is_restart: bool):
-	if is_restart:
-		print("Restart!")
-		get_tree().reload_current_scene()
-		return
-		
-	start.emit()
-	drop_chip_timer.one_shot = true
-	drop_chip_timer.wait_time = drop_chip_cooldown
-	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	add_child(drop_chip_timer)
-	
-	board = []
-	for row in range(rows):
-		board.append([])
-		for col in range(cols):
-			board[row].append(PlayerState.EMPTY)
 			
-
-func _connect_signals():
-	var restart_button: Button = $"/root/Main/win_menu/CenterContainer/VBoxContainer/Button"
-	var main = $"/root/Main"
-	if restart_button:
-		restart_button.game_restart.connect(initialize.bind(1))
-	if main:
-		main.game_restart.connect(initialize.bind(1))
-
-func _is_valid_move(col):
-	#and current_player is not user_player
-	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY
+func set_user_player(player):
+	match player:
+		PlayerState.PLAYER1:
+			users["PLAYER"] = PlayerState.PLAYER1
+			users["AI"] = PlayerState.PLAYER2
+		PlayerState.PLAYER2:
+			users["PLAYER"] = PlayerState.PLAYER2
+			users["AI"] = PlayerState.PLAYER1
 
 func drop_chip(user, col):
 	if not _is_valid_move(col):
@@ -99,6 +78,37 @@ func drop_chip(user, col):
 			_save_data()
 			return true
 	return false
+
+func _initialize(is_restart: bool):
+	if is_restart:
+		print("Restart!")
+		get_tree().reload_current_scene()
+		return
+		
+	start.emit()
+	drop_chip_timer.one_shot = true
+	drop_chip_timer.wait_time = drop_chip_cooldown
+	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
+	add_child(drop_chip_timer)
+	
+	board = []
+	for row in range(rows):
+		board.append([])
+		for col in range(cols):
+			board[row].append(PlayerState.EMPTY)
+
+func _connect_signals():
+	var main = $"/root/Main"
+	var restart_button: Button = $"/root/Main/win_menu/CenterContainer/VBoxContainer/Button"
+	if restart_button:
+		restart_button.game_restart.connect(_initialize.bind(1))
+	if main:
+		main.game_restart.connect(_initialize.bind(1))
+
+func _is_valid_move(col):
+	#and current_player is not user_player
+	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY
+
 
 func _switch_turn():
 	match current_player:
