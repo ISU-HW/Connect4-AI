@@ -1,7 +1,5 @@
 extends Node3D
 
-signal game_restart
-
 var _save_path_fullscreen_mode = "user://fullscreen_mode.save"
 var _toggle_fullscreen_action: StringName = "toggle_fullscreen"
 var _exit_app_action: StringName = "exit"
@@ -37,7 +35,7 @@ func _process_input_actions():
 		get_tree().quit()
 		
 	if Input.is_action_just_pressed(_restart_game_action):
-		game_restart.emit()
+		connect4._initialize(1)
 #endregion
 
 #region Display Management

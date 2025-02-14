@@ -36,7 +36,6 @@ func _ready():
 		#users["PLAYER"] = PlayerState.PLAYER2
 		#users["AI"] = PlayerState.PLAYER1
 	_initialize(0)
-	_connect_signals()
 			
 func set_user_player(player):
 	match player:
@@ -96,15 +95,7 @@ func _initialize(is_restart: bool):
 		board.append([])
 		for col in range(cols):
 			board[row].append(PlayerState.EMPTY)
-
-func _connect_signals():
-	var main = $"/root/Main"
-	var restart_button: Button = $"/root/Main/win_menu/CenterContainer/VBoxContainer/Button"
-	if restart_button:
-		restart_button.game_restart.connect(_initialize.bind(1))
-	if main:
-		main.game_restart.connect(_initialize.bind(1))
-
+			
 func _is_valid_move(col):
 	#and current_player is not user_player
 	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY
