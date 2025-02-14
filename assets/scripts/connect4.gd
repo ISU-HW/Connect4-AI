@@ -70,15 +70,19 @@ func set_user_player(player):
 		PlayerState.PLAYER2:
 			users["PLAYER"] = PlayerState.PLAYER2
 			users["AI"] = PlayerState.PLAYER1
+			
+	connect4.current_player = player
 
 func drop_chip(user, col):
 	if not _is_valid_move(col):
 		not_valid_move.emit()
 		return false
-		
+	
+	if _is_board_empty():
+		start.emit()
+	
 	#check user for right player turn if not set setting to ignore all users except "I" for debug
 	#if users[user] == current_player:
-
 	for row in range(rows - 1, -1, -1):
 		if board[row][col] == PlayerState.EMPTY:
 			drop_chip_timer.start()
@@ -151,6 +155,12 @@ func _get_matches_in_direction(start_row, start_col, step_row, step_col):
 func _is_board_full() -> bool:
 	for row in board:
 		if PlayerState.EMPTY in row:
+			return false
+	return true
+	
+func _is_board_empty() -> bool:
+	for row in board:
+		if PlayerState.PLAYER1 in row or PlayerState.PLAYER2 in row:
 			return false
 	return true
 	

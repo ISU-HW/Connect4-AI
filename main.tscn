@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=39 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
@@ -13,8 +13,7 @@
 [ext_resource type="Shader" path="res://assets/shaders/blur.gdshader" id="9_8kwvi"]
 [ext_resource type="Texture2D" uid="uid://b416i21s4vrft" path="res://assets/png/back.png" id="13_7sh41"]
 [ext_resource type="PackedScene" uid="uid://cycny62yykefs" path="res://nodes/player_display.tscn" id="13_n7lka"]
-[ext_resource type="Texture2D" uid="uid://brdxbwgtfjq4d" path="res://assets/png/back_outiline.png" id="13_xeu8e"]
-[ext_resource type="PackedScene" uid="uid://o81on4ls1dt0" path="res://nodes/player_choose.tscn" id="15_ad4ad"]
+[ext_resource type="PackedScene" uid="uid://bai6jmk2kbbud" path="res://nodes/radio_button_group.tscn" id="13_ohaa6"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_tnvoq"]
 panorama = ExtResource("2_onqyp")
@@ -254,28 +253,28 @@ script/source = "extends Button
 func _ready() -> void:
 	pressed.connect(_on_pressed)
 	
+	self.add_to_group(\"buttons\")
+	
 func _on_pressed():
 	connect4.restart_game()
 "
 
-[sub_resource type="GDScript" id="GDScript_7v000"]
-script/source = "extends Container
+[sub_resource type="GDScript" id="GDScript_gqlwu"]
+script/source = "extends Control
 
-@export var transition_duration = 0.2
+@export var transition_duration = 0.1
 
-var tween: Tween
-
-@onready var choose_buttons: Array[Button] = [$Choice/HSplitContainer/Player1, $Choice/HSplitContainer/Player2]
+var tween
 
 func _ready() -> void:
-	for button in choose_buttons:
-		button.pressed.connect(_on_choose)
-		
-func _on_choose():
-	zoom_out()
-	await tween.finished
-	connect4.start.emit()
-	
+	connect4.start.connect(fade_out)
+
+func fade_out() -> void:
+	if tween:
+		tween.kill()
+	tween = create_tween()
+	tween.tween_property(self, \"modulate:a\", 0.0, transition_duration).set_ease(Tween.EASE_IN)
+
 func zoom_out() -> void:
 	if tween:
 		tween.kill()
@@ -299,10 +298,15 @@ cache/0/42/0/descent = 0.0
 cache/0/42/0/underline_position = 0.0
 cache/0/42/0/underline_thickness = 0.0
 cache/0/42/0/scale = 1.0
+cache/0/24/0/ascent = 0.0
+cache/0/24/0/descent = 0.0
+cache/0/24/0/underline_position = 0.0
+cache/0/24/0/underline_thickness = 0.0
+cache/0/24/0/scale = 1.0
 
 [sub_resource type="LabelSettings" id="LabelSettings_4u2jv"]
 font = SubResource("FontFile_ymwhs")
-font_size = 42
+font_size = 24
 shadow_size = 3
 shadow_color = Color(0, 0, 0, 0.5)
 
@@ -430,9 +434,8 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -225.0
-offset_top = -100.0
+offset_top = -80.0
 offset_right = 225.0
-offset_bottom = -20.0
 grow_horizontal = 2
 size_flags_horizontal = 4
 dragger_visibility = 1
@@ -553,78 +556,44 @@ tooltip_text = "[R]"
 text = "Restart"
 script = SubResource("GDScript_x3p5e")
 
-[node name="choose_menu" type="Container" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -1017.5
-offset_top = -540.0
-offset_right = 1017.5
-offset_bottom = 540.0
-grow_horizontal = 2
-grow_vertical = 2
-pivot_offset = Vector2(1018.5, 539)
-script = SubResource("GDScript_7v000")
+[node name="choose_menu" type="Control" parent="."]
+layout_mode = 3
+anchor_left = 0.99
+anchor_top = 0.02
+anchor_right = 0.99
+anchor_bottom = 0.02
+grow_horizontal = 0
+pivot_offset = Vector2(1142, 3)
+script = SubResource("GDScript_gqlwu")
 
-[node name="Control" type="Control" parent="choose_menu"]
-layout_mode = 2
-
-[node name="Choose color" type="Label" parent="choose_menu/Control"]
+[node name="Choose color" type="Label" parent="choose_menu"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -122.0
-offset_top = -208.5
-offset_right = 122.0
-offset_bottom = -151.5
-grow_horizontal = 2
-grow_vertical = 2
-text = "Choose color"
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -225.0
+offset_top = 120.0
+grow_horizontal = 0
+size_flags_vertical = 8
+text = "You can select the color"
 label_settings = SubResource("LabelSettings_4u2jv")
+horizontal_alignment = 1
+autowrap_mode = 2
 
-[node name="Choice" type="TextureRect" parent="choose_menu/Control"]
+[node name="Buttons" type="TextureRect" parent="choose_menu"]
 clip_children = 1
-custom_minimum_size = Vector2(300, 150)
-layout_mode = 2
-offset_left = 170.0
-offset_top = -257.0
-offset_right = 470.0
-offset_bottom = -107.0
+custom_minimum_size = Vector2(225, 112.5)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -225.0
+offset_bottom = 112.5
+grow_horizontal = 0
 texture = ExtResource("13_7sh41")
 expand_mode = 1
 
-[node name="HSplitContainer" type="HSplitContainer" parent="choose_menu/Control/Choice"]
+[node name="HSplitContainer" parent="choose_menu/Buttons" instance=ExtResource("13_ohaa6")]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-collapsed = true
-dragger_visibility = 2
-
-[node name="Player1" parent="choose_menu/Control/Choice/HSplitContainer" instance=ExtResource("15_ad4ad")]
-layout_mode = 2
-size_flags_horizontal = 3
-player = 1
-
-[node name="Player2" parent="choose_menu/Control/Choice/HSplitContainer" instance=ExtResource("15_ad4ad")]
-layout_mode = 2
-size_flags_horizontal = 3
-player = 2
-
-[node name="TextureRect" type="TextureRect" parent="choose_menu"]
-layout_mode = 2
-texture = ExtResource("13_xeu8e")
-
-[node name="ColorRect" type="ColorRect" parent="choose_menu"]
-custom_minimum_size = Vector2(1920, 1080)
-layout_mode = 2
-color = Color(0, 0, 0, 0)
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]

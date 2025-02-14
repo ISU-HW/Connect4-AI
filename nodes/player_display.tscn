@@ -98,6 +98,7 @@ texture = ExtResource("2_nphiy")
 region_rect = Rect2(0, 0, 251, 100)
 script = SubResource("GDScript_3p0nf")
 transition_duration = 0.1
+fade_out_on = 0.3
 shrink_size = Vector2(200, 80)
 expand_size = Vector2(200, 80)
 shrink_position_y = -10
