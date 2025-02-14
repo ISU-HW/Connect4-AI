@@ -31,12 +31,36 @@ var draws: int = 0
 
 func _ready():
 	_load_data()
-	#choose player
-	#if user_choose != PlayerState.PLAYER1:
-		#users["PLAYER"] = PlayerState.PLAYER2
-		#users["AI"] = PlayerState.PLAYER1
-	_initialize(0)
-			
+	_initialize_game()
+
+func _initialize_game():
+	_setup_game_state()
+	_setup_timer()
+	_create_board()
+
+func _setup_game_state():
+	current_player = PlayerState.PLAYER1
+	player_winner = 0
+	win_chips = []
+	last_move = Vector2i()
+
+func _setup_timer():
+	drop_chip_timer.one_shot = true
+	drop_chip_timer.wait_time = drop_chip_cooldown
+	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
+	add_child(drop_chip_timer)
+
+func _create_board():
+	board = []
+	for row in range(rows):
+		board.append([])
+		for col in range(cols):
+			board[row].append(PlayerState.EMPTY)
+
+# Публичный метод для рестарта игры
+func restart_game():
+	_initialize_game()
+
 func set_user_player(player):
 	match player:
 		PlayerState.PLAYER1:
@@ -77,27 +101,6 @@ func drop_chip(user, col):
 			_save_data()
 			return true
 	return false
-
-func _initialize(is_restart: bool):
-	board = []
-	for row in range(rows):
-		board.append([])
-		for col in range(cols):
-			board[row].append(PlayerState.EMPTY)
-	
-	if is_restart:
-		print("Restart!")
-		current_player = PlayerState.PLAYER1
-		player_winner = PlayerState.EMPTY
-		last_move = Vector2i()
-		win_chips = []
-		get_tree().reload_current_scene()
-		return 
-		
-	drop_chip_timer.one_shot = true
-	drop_chip_timer.wait_time = drop_chip_cooldown
-	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	add_child(drop_chip_timer)
 	
 func _is_valid_move(col):
 	#and current_player is not user_player

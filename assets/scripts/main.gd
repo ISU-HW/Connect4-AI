@@ -35,7 +35,7 @@ func _process_input_actions():
 		get_tree().quit()
 		
 	if Input.is_action_just_pressed(_restart_game_action):
-		connect4._initialize(1)
+		connect4.restart_game()
 #endregion
 
 #region Display Management
