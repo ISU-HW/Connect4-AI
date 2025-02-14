@@ -22,37 +22,41 @@ var stylebox_hover = StyleBoxFlat.new()
 var stylebox_pressed = StyleBoxFlat.new()
 
 func _ready() -> void:
+	pressed.connect(_on_choose.bind(int(button.player)))
+	
 	stylebox_normal.bg_color = PLAYER_COLORS[player].darkened(0.05)
 	stylebox_hover.bg_color = PLAYER_COLORS[player]
 	stylebox_pressed.bg_color = PLAYER_COLORS[player].lightened(0.2)
 	add_theme_stylebox_override(\"normal\", stylebox_normal)
 	add_theme_stylebox_override(\"hover\", stylebox_hover)
 	add_theme_stylebox_override(\"pressed\", stylebox_pressed)
+
+func _on_choose(player: connect4.PlayerState):
+	connect4.set_user_player(player)
+	connect4.current_player = player
 "
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_fwube"]
 blend_mode = 2
 
 [node name="Player" type="Button"]
-offset_right = 163.0
-offset_bottom = 161.0
+offset_right = 100.0
+offset_bottom = 100.0
 theme_override_styles/hover = SubResource("StyleBoxFlat_i24tj")
 theme_override_styles/normal = SubResource("StyleBoxFlat_f3ibu")
 script = SubResource("GDScript_l84jk")
+player = null
 
 [node name="TextureRect" type="TextureRect" parent="."]
 texture_filter = 4
 material = SubResource("CanvasItemMaterial_fwube")
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -64.5
-offset_top = -64.5
-offset_right = 64.5
-offset_bottom = 64.5
+anchors_preset = -1
+anchor_left = 0.2
+anchor_top = 0.2
+anchor_right = 0.8
+anchor_bottom = 0.8
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("1_auj8r")
+expand_mode = 3

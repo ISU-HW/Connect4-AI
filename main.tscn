@@ -259,7 +259,7 @@ func _on_pressed():
 "
 
 [sub_resource type="GDScript" id="GDScript_7v000"]
-script/source = "extends CenterContainer
+script/source = "extends Container
 
 @export var transition_duration = 0.2
 
@@ -269,11 +269,9 @@ var tween: Tween
 
 func _ready() -> void:
 	for button in choose_buttons:
-		button.pressed.connect(_on_choose.bind(int(button.player)))
+		button.pressed.connect(_on_choose)
 		
-func _on_choose(player: connect4.PlayerState):
-	connect4.set_user_player(player)
-	connect4.current_player = player
+func _on_choose():
 	zoom_out()
 	await tween.finished
 	connect4.start.emit()
@@ -555,7 +553,7 @@ tooltip_text = "[R]"
 text = "Restart"
 script = SubResource("GDScript_x3p5e")
 
-[node name="choose_menu" type="CenterContainer" parent="."]
+[node name="choose_menu" type="Container" parent="."]
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -570,41 +568,6 @@ grow_vertical = 2
 pivot_offset = Vector2(1018.5, 539)
 script = SubResource("GDScript_7v000")
 
-[node name="TextureRect" type="TextureRect" parent="choose_menu"]
-layout_mode = 2
-texture = ExtResource("13_xeu8e")
-
-[node name="ColorRect" type="ColorRect" parent="choose_menu"]
-custom_minimum_size = Vector2(1920, 1080)
-layout_mode = 2
-color = Color(0, 0, 0, 0)
-
-[node name="Choice" type="TextureRect" parent="choose_menu"]
-clip_children = 1
-custom_minimum_size = Vector2(320, 240)
-layout_mode = 2
-texture = ExtResource("13_7sh41")
-
-[node name="HSplitContainer" type="HSplitContainer" parent="choose_menu/Choice"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-collapsed = true
-dragger_visibility = 2
-
-[node name="Player1" parent="choose_menu/Choice/HSplitContainer" instance=ExtResource("15_ad4ad")]
-layout_mode = 2
-size_flags_horizontal = 3
-player = 1
-
-[node name="Player2" parent="choose_menu/Choice/HSplitContainer" instance=ExtResource("15_ad4ad")]
-layout_mode = 2
-size_flags_horizontal = 3
-player = 2
-
 [node name="Control" type="Control" parent="choose_menu"]
 layout_mode = 2
 
@@ -615,13 +578,53 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -93.0
-offset_top = -202.0
-offset_right = 93.0
-offset_bottom = -158.0
+offset_left = -122.0
+offset_top = -208.5
+offset_right = 122.0
+offset_bottom = -151.5
 grow_horizontal = 2
 grow_vertical = 2
 text = "Choose color"
 label_settings = SubResource("LabelSettings_4u2jv")
+
+[node name="Choice" type="TextureRect" parent="choose_menu/Control"]
+clip_children = 1
+custom_minimum_size = Vector2(300, 150)
+layout_mode = 2
+offset_left = 170.0
+offset_top = -257.0
+offset_right = 470.0
+offset_bottom = -107.0
+texture = ExtResource("13_7sh41")
+expand_mode = 1
+
+[node name="HSplitContainer" type="HSplitContainer" parent="choose_menu/Control/Choice"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+collapsed = true
+dragger_visibility = 2
+
+[node name="Player1" parent="choose_menu/Control/Choice/HSplitContainer" instance=ExtResource("15_ad4ad")]
+layout_mode = 2
+size_flags_horizontal = 3
+player = 1
+
+[node name="Player2" parent="choose_menu/Control/Choice/HSplitContainer" instance=ExtResource("15_ad4ad")]
+layout_mode = 2
+size_flags_horizontal = 3
+player = 2
+
+[node name="TextureRect" type="TextureRect" parent="choose_menu"]
+layout_mode = 2
+texture = ExtResource("13_xeu8e")
+
+[node name="ColorRect" type="ColorRect" parent="choose_menu"]
+custom_minimum_size = Vector2(1920, 1080)
+layout_mode = 2
+color = Color(0, 0, 0, 0)
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]
