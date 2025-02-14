@@ -22,9 +22,9 @@ var drop_chip_cooldown = 0.3
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var board: Array = []
 var current_player: int = PlayerState.PLAYER1
+var player_winner: int = PlayerState.EMPTY
 var win_chips: Array
 var last_move: Vector2i
-var player_winner: int = 0
 var wins: int = 0
 var losses: int = 0
 var draws: int = 0
@@ -79,23 +79,26 @@ func drop_chip(user, col):
 	return false
 
 func _initialize(is_restart: bool):
-	if is_restart:
-		print("Restart!")
-		get_tree().reload_current_scene()
-		return
-		
-	start.emit()
-	drop_chip_timer.one_shot = true
-	drop_chip_timer.wait_time = drop_chip_cooldown
-	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	add_child(drop_chip_timer)
-	
 	board = []
 	for row in range(rows):
 		board.append([])
 		for col in range(cols):
 			board[row].append(PlayerState.EMPTY)
-			
+	
+	if is_restart:
+		print("Restart!")
+		current_player = PlayerState.PLAYER1
+		player_winner = PlayerState.EMPTY
+		last_move = Vector2i()
+		win_chips = []
+		get_tree().reload_current_scene()
+		return 
+		
+	drop_chip_timer.one_shot = true
+	drop_chip_timer.wait_time = drop_chip_cooldown
+	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
+	add_child(drop_chip_timer)
+	
 func _is_valid_move(col):
 	#and current_player is not user_player
 	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY

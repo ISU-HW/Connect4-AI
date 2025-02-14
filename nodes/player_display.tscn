@@ -33,10 +33,10 @@ var PLAYER_COLORS = {
 @onready var label: Label = %Label
 
 func _ready() -> void:
+	connect4.start.connect(_on_turn_changed)
 	connect4.turn_changed.connect(_on_turn_changed)
 	label.label_settings = label.label_settings.duplicate(true)
 	_apply_player_color()
-	_update()
 
 func _apply_player_color() -> void:
 	var new_material = get_material().duplicate()
