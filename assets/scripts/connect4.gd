@@ -35,8 +35,8 @@ func _ready():
 
 func _initialize_game():
 	_setup_game_state()
-	_setup_timer()
 	_create_board()
+	_setup_timer()
 
 func _setup_game_state():
 	current_player = PlayerState.PLAYER1
@@ -57,9 +57,10 @@ func _create_board():
 		for col in range(cols):
 			board[row].append(PlayerState.EMPTY)
 
-# Публичный метод для рестарта игры
 func restart_game():
-	_initialize_game()
+	_setup_game_state()
+	_create_board()
+	get_tree().reload_current_scene()
 
 func set_user_player(player):
 	match player:
@@ -103,7 +104,7 @@ func drop_chip(user, col):
 	return false
 	
 func _is_valid_move(col):
-	#and current_player is not user_player
+	#and current_player is not user_player["PLAYER"]
 	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY
 
 
