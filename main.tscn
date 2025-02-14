@@ -476,6 +476,7 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="HSplitContainer" type="HSplitContainer" parent="win_menu/CenterContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 dragger_visibility = 1
 
