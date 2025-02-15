@@ -16,10 +16,10 @@ func _ready() -> void:
 	pressed.connect(_on_press)
 	
 	self.add_to_group("buttons")
-	if player == connect4.PlayerState.PLAYER1:
-		button_pressed = true
+	#if player == connect4.PlayerState.PLAYER1:
+		#button_pressed = true
 	
-	stylebox_normal.bg_color = PLAYER_COLORS[player].darkened(0.1).blend(unpressed_blend_color)
+	stylebox_normal.bg_color = PLAYER_COLORS[player]
 	stylebox_hover.bg_color = PLAYER_COLORS[player].lightened(0.2)
 	stylebox_pressed.bg_color = PLAYER_COLORS[player]
 	add_theme_stylebox_override("normal", stylebox_normal)
@@ -27,12 +27,13 @@ func _ready() -> void:
 	add_theme_stylebox_override("pressed", stylebox_pressed)
 
 func _on_press():
-	if not self.button_pressed:
-		self.button_pressed = true
-		return
+	#if not self.button_pressed:
+		#self.button_pressed = true
+		#return
 		
-	_unpress_button_group()
+	#_unpress_button_group()
 	connect4.set_user_player(player)
+	connect4.start.emit()
 
 func _unpress_button_group():
 	var group = self.button_group.get_buttons()

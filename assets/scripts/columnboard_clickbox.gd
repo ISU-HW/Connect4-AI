@@ -36,7 +36,7 @@ func _on_input_event(_camera: Node, event: InputEvent, _position: Vector3, _norm
 	if event is InputEventMouseButton:
 		if event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 			print("Column", self.column, " clicked!")
-			connect4.drop_chip("I", column)
+			connect4.drop_chip("PLAYER", column)
 			clicked.emit()
 
 func _on_mouse_entered():

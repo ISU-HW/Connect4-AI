@@ -1,6 +1,5 @@
-[gd_scene load_steps=6 format=3 uid="uid://bai6jmk2kbbud"]
+[gd_scene load_steps=5 format=3 uid="uid://bai6jmk2kbbud"]
 
-[ext_resource type="Script" path="res://assets/scripts/radio_button_group.gd" id="1_c4bw1"]
 [ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="1_l8cq5"]
 [ext_resource type="Script" path="res://assets/scripts/radio_button.gd" id="2_y54md"]
 
@@ -17,7 +16,6 @@ grow_horizontal = 2
 grow_vertical = 2
 collapsed = true
 dragger_visibility = 2
-script = ExtResource("1_c4bw1")
 
 [node name="Player1" type="Button" parent="."]
 layout_mode = 2

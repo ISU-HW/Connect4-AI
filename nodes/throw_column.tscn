@@ -12,7 +12,7 @@ size = Vector3(1.6, 10.5, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_n3yhm"]
 transparency = 1
-albedo_color = Color(1, 1, 1, 0.129412)
+albedo_color = Color(1, 1, 1, 0.196078)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1x48v"]
 size = Vector3(1.6, 10.5, 1)
@@ -37,7 +37,7 @@ mesh = SubResource("BoxMesh_dxmu4")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_n3yhm")
 script = ExtResource("6_vev8j")
-shake_offset = 0.3
+tween_duration = 0.5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_1x48v")

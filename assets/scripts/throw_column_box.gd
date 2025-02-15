@@ -1,7 +1,7 @@
 extends MeshInstance3D
 
 @export var tween_duration: float = 0.2
-@export var shake_offset: float = 0.1
+@export var shake_offset: float = 0.3
 @export_enum("X", "Y", "Z") var shake_axis: String = "X"
 
 var material = get_surface_override_material(0)

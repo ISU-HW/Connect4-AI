@@ -240,8 +240,7 @@ func _ready() -> void:
 	connect4.draw.connect(_on_end)
 	
 func _on_end():
-	var player = connect4.get_current_player()
-	match player:
+	match connect4.player_winner:
 		connect4.PlayerState.PLAYER1:
 			self.text = \"You've won!🎉\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 else \"AI has won!🤝\"
 			self.set(\"theme_override_colors/font_color\", connect4.spawnconfig_player1.model_color)
@@ -280,6 +279,8 @@ func fade_out() -> void:
 		tween.kill()
 	tween = create_tween()
 	tween.tween_property(self, \"modulate:a\", 0.0, transition_duration).set_ease(Tween.EASE_IN)
+	await tween.finished
+	visible = false
 
 func zoom_out() -> void:
 	if tween:
@@ -418,8 +419,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -225.0
-offset_top = -80.0
+offset_top = -200.0
 offset_right = 225.0
+offset_bottom = -120.0
 grow_horizontal = 2
 size_flags_horizontal = 4
 dragger_visibility = 1
@@ -429,15 +431,15 @@ script = SubResource("GDScript_b1ki2")
 layout_mode = 2
 size_flags_horizontal = 6
 player = 1
-is_player_turn = true
 
 [node name="player2" parent="turn_display" instance=ExtResource("13_n7lka")]
 layout_mode = 2
 size_flags_horizontal = 6
 player = 2
 
-[node name="win_menu" type="CenterContainer" parent="."]
+[node name="win_menu" type="Control" parent="."]
 visible = false
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -449,12 +451,20 @@ script = SubResource("GDScript_b86cp")
 
 [node name="ColorRect" type="ColorRect" parent="win_menu"]
 material = SubResource("ShaderMaterial_44law")
-custom_minimum_size = Vector2(1920, 1080)
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 color = Color(0, 0, 0, 0.392157)
 
 [node name="CenterContainer" type="CenterContainer" parent="win_menu"]
 layout_mode = 2
+offset_left = 416.0
+offset_top = 58.0
+offset_right = 736.0
+offset_bottom = 589.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="win_menu/CenterContainer"]
 layout_mode = 2
@@ -543,40 +553,49 @@ theme_override_font_sizes/font_size = 22
 text = "Restart"
 script = SubResource("GDScript_x3p5e")
 
-[node name="choose_menu" type="Control" parent="."]
-layout_mode = 3
-anchor_left = 0.99
-anchor_top = 0.02
-anchor_right = 0.99
-anchor_bottom = 0.02
-grow_horizontal = 0
-pivot_offset = Vector2(1142, 3)
+[node name="choose_menu" type="Panel" parent="."]
+self_modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = SubResource("GDScript_gqlwu")
 
 [node name="Choose color" type="Label" parent="choose_menu"]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -225.0
-offset_top = 120.0
-grow_horizontal = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -112.5
+offset_top = 180.0
+offset_right = 112.5
+offset_bottom = 13.5
+grow_horizontal = 2
+grow_vertical = 2
 size_flags_vertical = 8
-text = "You can select the color"
+text = "Select your color"
 label_settings = SubResource("LabelSettings_4u2jv")
 horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="Buttons" type="TextureRect" parent="choose_menu"]
 clip_children = 1
-custom_minimum_size = Vector2(225, 112.5)
+custom_minimum_size = Vector2(200, 150)
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -225.0
-offset_bottom = 112.5
-grow_horizontal = 0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -112.5
+offset_top = -56.25
+offset_right = 112.5
+offset_bottom = 56.25
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("13_7sh41")
 expand_mode = 1
 

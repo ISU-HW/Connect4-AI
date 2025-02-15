@@ -18,7 +18,7 @@ var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
 var drop_chip_cooldown = 0.3
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
-var board: Array = []
+var game_board: Array = []
 var current_player: int = PlayerState.PLAYER1
 var player_winner: int = PlayerState.EMPTY
 var win_chips: Array
@@ -26,7 +26,7 @@ var last_move: Vector2i
 var wins: int = 0
 var losses: int = 0
 var draws: int = 0
-
+#region Game Initializing
 func _ready():
 	_load_data()
 	_initialize_game()
@@ -43,18 +43,21 @@ func _setup_game_state():
 	last_move = Vector2i()
 
 func _setup_timer():
+	drop_chip_timer.autostart = true
 	drop_chip_timer.one_shot = true
 	drop_chip_timer.wait_time = drop_chip_cooldown
 	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
 	add_child(drop_chip_timer)
 
 func _create_board():
-	board = []
+	game_board = []
 	for row in range(rows):
-		board.append([])
+		game_board.append([])
 		for col in range(cols):
-			board[row].append(PlayerState.EMPTY)
+			game_board[row].append(PlayerState.EMPTY)
+#endregion
 
+#region Public Methods
 func restart_game():
 	_setup_game_state()
 	_create_board()
@@ -68,54 +71,86 @@ func set_user_player(player):
 		PlayerState.PLAYER2:
 			users["PLAYER"] = PlayerState.PLAYER2
 			users["AI"] = PlayerState.PLAYER1
-
-	connect4.current_player = player
+			turn_changed.emit()
 
 func drop_chip(user, col):
 	if not _is_valid_move(col):
 		not_valid_move.emit()
 		return false
 
-	if _is_board_empty():
+	if is_board_empty():
 		start.emit()
 
 	#check user for right player turn if not set setting to ignore all users except "I" for debug
-	#if users[user] == current_player:
-	for row in range(rows - 1, -1, -1):
-		if board[row][col] == PlayerState.EMPTY:
-			drop_chip_timer.start()
-			board[row][col] = current_player
+	if users[user] == current_player:
+		for row in range(rows - 1, -1, -1):
+			if game_board[row][col] == PlayerState.EMPTY:
+				drop_chip_timer.start()
+				game_board[row][col] = current_player
 
-			last_move = Vector2i(row, col)
-			chip_dropped.emit(last_move, current_player)
+				last_move = Vector2i(row, col)
+				chip_dropped.emit(last_move, current_player)
 
-			win_chips = _win_matches(row, col)
-			print(win_chips)
-			if win_chips:
-				player_winner = current_player
-				match player_winner:
-					users.PLAYER:
-						wins += 1
-					users.AI:
-						losses += 1
-				win.emit()
-				print("Player ", current_player, " wins!")
-			elif _is_board_full():
-				current_player = PlayerState.EMPTY
-				player_winner = PlayerState.EMPTY
-				draws += 1
-				draw.emit()
-				print("A draw")
+				win_chips = win_matches(game_board, row, col, current_player)
+				print(win_chips)
+				if win_chips:
+					player_winner = current_player
+					match player_winner:
+						users.PLAYER:
+							wins += 1
+						users.AI:
+							losses += 1
+					win.emit()
+					print("Player ", current_player, " wins!")
+				elif is_board_full():
+					current_player = PlayerState.EMPTY
+					player_winner = PlayerState.EMPTY
+					draws += 1
+					draw.emit()
+					print("A draw")
 
-			_switch_turn()
-			_save_data()
-			return true
-	return false
+				_switch_turn()
+				_save_data()
+				return true
+		return false
+	
+func get_all_valid_moves() -> Array:
+	var valid_moves = []
+	for col in range(cols):
+		if _is_valid_move(col):
+			valid_moves.append(col)
+	return valid_moves
+	
+func is_board_full() -> bool:
+	for row in game_board:
+		if PlayerState.EMPTY in row:
+			return false
+	return true
 
+func is_board_empty() -> bool:
+	for row in game_board:
+		if PlayerState.PLAYER1 in row or PlayerState.PLAYER2 in row:
+			return false
+	return true
+	
+func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array:
+	const directions = [
+		Vector2i(1, 0),    # вертикаль
+		Vector2i(0, 1),    # горизонталь
+		Vector2i(1, 1),    # диагональ по нисходящей
+		Vector2i(1, -1)    # диагональ по восходящей
+	]
+	
+	for direction in directions:
+		var matches = _win_matches_in_direction(board, row, col, direction, player)
+		if matches.size() >= 4:
+			return matches
+	return []  # Если ни в одном направлении не найдено 4-х подряд
+#endregion
+
+#region Private Methods
 func _is_valid_move(col):
-	#and current_player is not user_player["PLAYER"]
-	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY
-
+	return drop_chip_timer.time_left == 0 and player_winner == 0 and game_board[0][col] == PlayerState.EMPTY
 
 func _switch_turn():
 	match current_player:
@@ -127,49 +162,26 @@ func _switch_turn():
 			current_player = PlayerState.PLAYER1
 	turn_changed.emit()
 
-func _win_matches(row, col):
-	const d_vertical = Vector2i(1, 0)
-	const d_horizontal = Vector2i(0, 1)
-	const d_diagonal_down = Vector2i(1, 1)
-	const d_diagonal_up = Vector2i(1, -1)
-
-	var directions = [d_vertical, d_horizontal, d_diagonal_down, d_diagonal_up]
-	for direction in directions:
-		var matches = _win_matches_in_direction(row, col, direction)
-		if matches:
-			return matches
-	return []
-
-func _win_matches_in_direction(row, col, direction: Vector2i):
-	var forward = _get_matches_in_direction(row, col, direction.x, direction.y)
-	var backward = _get_matches_in_direction(row, col, -direction.x, -direction.y)
+# Вспомогательная функция для поиска совпадений в заданном направлении с учётом токена игрока
+func _win_matches_in_direction(board: Array, row: int, col: int, direction: Vector2i, player: PlayerState) -> Array:
+	var forward = _get_matches_in_direction(board, row, col, direction.x, direction.y, player)
+	var backward = _get_matches_in_direction(board, row, col, -direction.x, -direction.y, player)
 	backward.reverse()
 	var all_matches = backward + [Vector2i(row, col)] + forward
-	return all_matches if all_matches.size() >= 4 else []
+	return all_matches
 
-func _get_matches_in_direction(start_row, start_col, step_row, step_col):
+# Функция, собирающая подряд идущие ячейки с указанным токеном вдоль заданного направления
+func _get_matches_in_direction(board: Array, start_row: int, start_col: int, step_row: int, step_col: int, player: PlayerState) -> Array:
 	var current_row = start_row + step_row
 	var current_col = start_col + step_col
 	var matches = []
-	while current_row >= 0 and current_row < rows and current_col >= 0 and current_col < cols:
-		if board[current_row][current_col] != current_player:
+	while current_row >= 0 and current_row < connect4.rows and current_col >= 0 and current_col < connect4.cols:
+		if board[current_row][current_col] != player:
 			break
 		matches.append(Vector2i(current_row, current_col))
 		current_row += step_row
 		current_col += step_col
 	return matches
-
-func _is_board_full() -> bool:
-	for row in board:
-		if PlayerState.EMPTY in row:
-			return false
-	return true
-
-func _is_board_empty() -> bool:
-	for row in board:
-		if PlayerState.PLAYER1 in row or PlayerState.PLAYER2 in row:
-			return false
-	return true
 
 func _save_data():
 	var config = ConfigFile.new()
@@ -189,11 +201,4 @@ func _load_data():
 		draws = config.get_value("Connect4", "draws", 2)
 	else:
 		print("Failed to load data: ", err)
-
-
-func get_board():
-	return board
-
-# Получение текущего хода
-func get_current_player():
-	return current_player
+#endregion
