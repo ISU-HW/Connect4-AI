@@ -1,7 +1,8 @@
-[gd_scene load_steps=9 format=3 uid="uid://cycny62yykefs"]
+[gd_scene load_steps=10 format=3 uid="uid://cycny62yykefs"]
 
 [ext_resource type="Shader" path="res://assets/shaders/hue.gdshader" id="1_kv7h3"]
 [ext_resource type="Texture2D" uid="uid://chofco3dg6wc5" path="res://assets/png/rounded_patch2.png" id="2_nphiy"]
+[ext_resource type="FontFile" uid="uid://bdili7ia2pkur" path="res://assets/fonts/Homenaje-Regular.ttf" id="4_0k384"]
 [ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="4_godv3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1pxvv"]
@@ -70,7 +71,8 @@ blend_mode = 2
 
 [sub_resource type="LabelSettings" id="LabelSettings_a10in"]
 line_spacing = 1.0
-font_size = 14
+font = ExtResource("4_0k384")
+font_size = 18
 
 [sub_resource type="GDScript" id="GDScript_pmxvm"]
 script/source = "extends Label

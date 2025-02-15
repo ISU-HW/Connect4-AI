@@ -74,6 +74,7 @@ const _ANGLE_GAP = PI/128
 func _ready() -> void:
 	connect4.win.connect(_on_end)
 	connect4.draw.connect(_on_end)
+	
 	_place_pivot()
 	var initial_angles = _pivot_transform.basis.get_euler()
 	_actual_x_angle = initial_angles.x
