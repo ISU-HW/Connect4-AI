@@ -11,12 +11,11 @@ signal draw
 var drop_chip_timer: Timer = Timer.new()
 enum PlayerState { EMPTY = 0, PLAYER1 = 1, PLAYER2 = 2 }
 
-
 const rows: int = 6
 const cols: int = 7
 var spawnconfig_player1 = load("res://assets/tres/spawnconfig_PLAYER1.tres")
 var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
-var drop_chip_cooldown = 0.2
+var drop_chip_cooldown = 0.3
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var board: Array = []
@@ -69,43 +68,50 @@ func set_user_player(player):
 		PlayerState.PLAYER2:
 			users["PLAYER"] = PlayerState.PLAYER2
 			users["AI"] = PlayerState.PLAYER1
-			
+
 	connect4.current_player = player
 
 func drop_chip(user, col):
 	if not _is_valid_move(col):
 		not_valid_move.emit()
 		return false
-	
+
 	if _is_board_empty():
 		start.emit()
-	
+
 	#check user for right player turn if not set setting to ignore all users except "I" for debug
 	#if users[user] == current_player:
 	for row in range(rows - 1, -1, -1):
 		if board[row][col] == PlayerState.EMPTY:
 			drop_chip_timer.start()
 			board[row][col] = current_player
-			
+
 			last_move = Vector2i(row, col)
 			chip_dropped.emit(last_move, current_player)
-			
+
 			win_chips = _win_matches(row, col)
 			print(win_chips)
 			if win_chips:
 				player_winner = current_player
+				match player_winner:
+					users.PLAYER:
+						wins += 1
+					users.AI:
+						losses += 1
 				win.emit()
 				print("Player ", current_player, " wins!")
 			elif _is_board_full():
 				current_player = PlayerState.EMPTY
 				player_winner = PlayerState.EMPTY
+				draws += 1
 				draw.emit()
-				print("It's a draw!")
+				print("A draw")
+
 			_switch_turn()
 			_save_data()
 			return true
 	return false
-	
+
 func _is_valid_move(col):
 	#and current_player is not user_player["PLAYER"]
 	return drop_chip_timer.time_left == 0 and player_winner == 0 and board[0][col] == PlayerState.EMPTY
@@ -113,6 +119,8 @@ func _is_valid_move(col):
 
 func _switch_turn():
 	match current_player:
+		PlayerState.EMPTY:
+			current_player = PlayerState.EMPTY
 		PlayerState.PLAYER1:
 			current_player = PlayerState.PLAYER2
 		PlayerState.PLAYER2:
@@ -124,7 +132,7 @@ func _win_matches(row, col):
 	const d_horizontal = Vector2i(0, 1)
 	const d_diagonal_down = Vector2i(1, 1)
 	const d_diagonal_up = Vector2i(1, -1)
-	
+
 	var directions = [d_vertical, d_horizontal, d_diagonal_down, d_diagonal_up]
 	for direction in directions:
 		var matches = _win_matches_in_direction(row, col, direction)
@@ -150,19 +158,19 @@ func _get_matches_in_direction(start_row, start_col, step_row, step_col):
 		current_row += step_row
 		current_col += step_col
 	return matches
-	
+
 func _is_board_full() -> bool:
 	for row in board:
 		if PlayerState.EMPTY in row:
 			return false
 	return true
-	
+
 func _is_board_empty() -> bool:
 	for row in board:
 		if PlayerState.PLAYER1 in row or PlayerState.PLAYER2 in row:
 			return false
 	return true
-	
+
 func _save_data():
 	var config = ConfigFile.new()
 	config.set_value("Connect4", "wins", wins)
