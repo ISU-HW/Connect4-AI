@@ -137,10 +137,11 @@ axis_lock_linear_x = true
 axis_lock_linear_z = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
-mass = 0.1
 physics_material_override = SubResource("PhysicsMaterial_okij4")
 gravity_scale = 3.0
 continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 1
 angular_velocity = Vector3(0, 0, 0.872665)
 script = ExtResource("1_1j851")
 bounce_sound = NodePath("AudioStreamPlayer")
@@ -158,6 +159,7 @@ mesh = ExtResource("3_tc2k1")
 surface_material_override/0 = SubResource("ShaderMaterial_rj8io")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
 shape = SubResource("CylinderShape3D_ts521")
 
@@ -165,7 +167,7 @@ shape = SubResource("CylinderShape3D_ts521")
 stream = ExtResource("5_csh3l")
 volume_db = 5.0
 
-[node name="win" type="GPUParticles3D" parent="."]
+[node name="win_particle" type="GPUParticles3D" parent="."]
 unique_name_in_owner = true
 visible = false
 amount = 5
@@ -175,7 +177,7 @@ visibility_aabb = AABB(-1.85924, -1.48023, -1.96399, 3.64321, 2.82597, 3.65847)
 process_material = SubResource("ParticleProcessMaterial_02c0o")
 draw_pass_1 = SubResource("PlaneMesh_t8gwu")
 
-[node name="win2" type="GPUParticles3D" parent="win"]
+[node name="win2" type="GPUParticles3D" parent="win_particle"]
 amount = 5
 lifetime = 1.2
 visibility_aabb = AABB(-1.06049, -1.05366, -1.68281, 2.14055, 2.93723, 3.34773)

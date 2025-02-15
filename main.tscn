@@ -191,7 +191,7 @@ var PLAYER1_COLOR = connect4.spawnconfig_player1.model_color
 var PLAYER2_COLOR = connect4.spawnconfig_player2.model_color
 
 func _ready() -> void:
-	$win.visible = true
+	%win_particle.visible = true
 	connect4.win.connect(_on_win)
 	connect4.draw.connect(_on_draw)
 	
@@ -243,7 +243,7 @@ func _on_end():
 			self.text = \"You've won...🫢\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 else \"AI has won)😹\"
 			self.set(\"theme_override_colors/font_color\", connect4.spawnconfig_player2.model_color)
 		connect4.PlayerState.EMPTY:
-			self.text = \"It's a draw.🤝\"
+			self.text = \"A draw.🤝\"
 			self.set(\"theme_override_colors/font_color\", Color.LIGHT_GRAY)
 "
 

@@ -2,7 +2,9 @@ extends RigidBody3D
 
 @export var board_position: Vector2i
 @export var bounce_sound: AudioStreamPlayer
+
 var previous_velocity_y: float = 0.0
+var _prevent_bounce_sound: bool = false
 
 func setup(config: SpawnConfig):
 #region Root Rotation
@@ -22,34 +24,40 @@ func setup(config: SpawnConfig):
 
 func _ready():
 	connect4.win.connect(_on_connect4_win)
-	#for node in get_tree().get_nodes_in_group("Pieces"):
-		#var _audio_player = node.get_node_or_null("AudioStreamPlayer")
-		#if audio_player is AudioStreamPlayer:
-			#audio_player.stream_paused = true
-	self.add_to_group("Pieces")
+	body_entered.connect(_on_body_entered)
+	add_to_group("pieces")
 	
-	#var timer = get_tree().create_timer(5.0, false, true)
-	#timer.timeout.connect(
-		#func():
-			#print("Timeout!")
-	#)
-	#await get_tree().create_timer(0.1).timeout
-	#while timer.get_time_left() != 0.0:
-		#await get_tree().physics_frame
-		#if snapped(self.linear_velocity.y, 0.001) == 0.0:
-			#break
-	#self.freeze = true
-	#print("Freeze!")
+	var timer = get_tree().create_timer(3.0, false, true)
+	
+	await get_tree().create_timer(0.1).timeout
+	while timer.get_time_left() != 0.0:
+		await get_tree().physics_frame
+		if snapped(self.linear_velocity.y, 0.001) == 0.0:
+			break
+	_prevent_bounce_sound = true
 
 func _physics_process(_delta):
 	var current_velocity_y = linear_velocity.y
 	if previous_velocity_y < 0 and current_velocity_y > 0:
-		if bounce_sound and not bounce_sound.playing:
+		if not _prevent_bounce_sound and not bounce_sound.playing:
 			bounce_sound.play()
 	previous_velocity_y = current_velocity_y
 
 func _on_connect4_win():
 	if board_position in connect4.win_chips:
 		await get_tree().create_timer(1).timeout
-		$win.visible = true
-		$Chip.scale.y *= 2
+		%win_particle.visible = true
+		%Chip.scale.y *= 2
+
+func _on_body_entered(body: Node):
+	if body is RigidBody3D:
+		var my_y = global_position.y
+		var other_y = body.global_position.y
+		
+		if my_y > other_y:
+			var my_height = 2*%CollisionShape3D.shape.radius
+			var overlap = abs(my_y - other_y)
+			
+			if overlap > (my_height * 0.5):
+				var impulse_strength = 1.0
+				self.apply_impulse(Vector3(0, 1, 0) * impulse_strength)

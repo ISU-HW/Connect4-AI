@@ -11,13 +11,12 @@ signal draw
 var drop_chip_timer: Timer = Timer.new()
 enum PlayerState { EMPTY = 0, PLAYER1 = 1, PLAYER2 = 2 }
 
-@export var spawnconfig_player1 = load("res://assets/tres/spawnconfig_PLAYER1.tres")
-@export var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
 
 const rows: int = 6
 const cols: int = 7
-
-var drop_chip_cooldown = 0.3
+var spawnconfig_player1 = load("res://assets/tres/spawnconfig_PLAYER1.tres")
+var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
+var drop_chip_cooldown = 0.2
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var board: Array = []
