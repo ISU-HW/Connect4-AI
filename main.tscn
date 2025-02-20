@@ -291,7 +291,7 @@ func zoom_out() -> void:
 
 [sub_resource type="LabelSettings" id="LabelSettings_4u2jv"]
 font = ExtResource("12_jkivn")
-font_size = 24
+font_size = 32
 shadow_size = 3
 shadow_color = Color(0, 0, 0, 0.5)
 
@@ -554,7 +554,7 @@ text = "Restart"
 script = SubResource("GDScript_x3p5e")
 
 [node name="choose_menu" type="Panel" parent="."]
-self_modulate = Color(1, 1, 1, 0)
+self_modulate = Color(1, 1, 1, 0.498039)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -569,10 +569,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -112.5
-offset_top = 180.0
-offset_right = 112.5
-offset_bottom = 13.5
+offset_left = -200.0
+offset_right = 200.0
+offset_bottom = -300.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 8
@@ -583,17 +582,16 @@ autowrap_mode = 2
 
 [node name="Buttons" type="TextureRect" parent="choose_menu"]
 clip_children = 1
-custom_minimum_size = Vector2(200, 150)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -112.5
-offset_top = -56.25
-offset_right = 112.5
-offset_bottom = 56.25
+offset_left = -150.0
+offset_top = -100.0
+offset_right = 150.0
+offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("13_7sh41")

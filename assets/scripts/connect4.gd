@@ -81,7 +81,6 @@ func drop_chip(user, col):
 	if is_board_empty():
 		start.emit()
 
-	#check user for right player turn if not set setting to ignore all users except "I" for debug
 	if users[user] == current_player:
 		for row in range(rows - 1, -1, -1):
 			if game_board[row][col] == PlayerState.EMPTY:

@@ -37,7 +37,6 @@ mesh = SubResource("BoxMesh_dxmu4")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_n3yhm")
 script = ExtResource("6_vev8j")
-tween_duration = 0.5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_1x48v")

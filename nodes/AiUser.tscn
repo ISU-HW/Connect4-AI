@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://assets/scripts/ai_user.gd" id="1_px2h3"]
-
-[node name="AiUser" type="Node"]
-script = ExtResource("1_px2h3")
