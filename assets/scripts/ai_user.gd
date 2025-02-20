@@ -92,15 +92,15 @@ func _calculate_minimax(board: Array, last_move: Vector2i, depth: int, is_maximi
 func _simulate_move(board: Array, col: int, user: String) -> Vector2i:
 	var player = connect4.users[user]
 	for row in range(connect4.rows - 1, -1, -1):
-		if board[row][col] == connect4.PlayerState.EMPTY:
-			board[row][col] = player
-			return Vector2i(row, col)
+		if board[col][row] == connect4.PlayerState.EMPTY:
+			board[col][row] = player
+			return Vector2i(col, row)
 	return Vector2i(-1, -1)
 
 func _get_valid_moves(board: Array) -> Array:
 	var valid_moves = []
 	for col in range(connect4.cols):
-		if board[0][col] == connect4.PlayerState.EMPTY:
+		if board[col][0] == connect4.PlayerState.EMPTY:
 			valid_moves.append(col)
 	return valid_moves
 

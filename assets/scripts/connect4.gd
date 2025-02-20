@@ -51,10 +51,10 @@ func _setup_timer():
 
 func _create_board():
 	game_board = []
-	for row in range(rows):
+	for col in range(cols):
 		game_board.append([])
-		for col in range(cols):
-			game_board[row].append(PlayerState.EMPTY)
+		for row in range(rows):
+			game_board[col].append(PlayerState.EMPTY)
 #endregion
 
 #region Public Methods
@@ -74,7 +74,7 @@ func set_user_player(player):
 			turn_changed.emit()
 
 func drop_chip(user, col):
-	if not _is_valid_move(col):
+	if not _is_valid_move(col) and not drop_chip_timer.time_left == 0:
 		not_valid_move.emit()
 		return false
 
@@ -83,9 +83,9 @@ func drop_chip(user, col):
 
 	if users[user] == current_player:
 		for row in range(rows - 1, -1, -1):
-			if game_board[row][col] == PlayerState.EMPTY:
+			if game_board[col][row] == PlayerState.EMPTY:
 				drop_chip_timer.start()
-				game_board[row][col] = current_player
+				game_board[col][row] = current_player
 
 				last_move = Vector2i(row, col)
 				chip_dropped.emit(last_move, current_player)
@@ -121,14 +121,14 @@ func get_all_valid_moves() -> Array:
 	return valid_moves
 	
 func is_board_full() -> bool:
-	for row in game_board:
-		if PlayerState.EMPTY in row:
+	for col in game_board:
+		if PlayerState.EMPTY in col:
 			return false
 	return true
 
 func is_board_empty() -> bool:
-	for row in game_board:
-		if PlayerState.PLAYER1 in row or PlayerState.PLAYER2 in row:
+	for col in game_board:
+		if PlayerState.PLAYER1 in col or PlayerState.PLAYER2 in col:
 			return false
 	return true
 	
@@ -141,7 +141,7 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 	]
 	
 	for direction in directions:
-		var matches = _win_matches_in_direction(board, row, col, direction, player)
+		var matches = _win_matches_in_direction(board, col, row, direction, player)
 		if matches.size() >= 4:
 			return matches
 	return []  # Если ни в одном направлении не найдено 4-х подряд
@@ -149,7 +149,7 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 
 #region Private Methods
 func _is_valid_move(col):
-	return drop_chip_timer.time_left == 0 and player_winner == 0 and game_board[0][col] == PlayerState.EMPTY
+	return player_winner == 0 and game_board[col][0] == PlayerState.EMPTY and col >= 0 and col < connect4.cols
 
 func _switch_turn():
 	match current_player:
@@ -162,20 +162,20 @@ func _switch_turn():
 	turn_changed.emit()
 
 # Вспомогательная функция для поиска совпадений в заданном направлении с учётом токена игрока
-func _win_matches_in_direction(board: Array, row: int, col: int, direction: Vector2i, player: PlayerState) -> Array:
-	var forward = _get_matches_in_direction(board, row, col, direction.x, direction.y, player)
-	var backward = _get_matches_in_direction(board, row, col, -direction.x, -direction.y, player)
+func _win_matches_in_direction(board: Array, col: int, row: int, direction: Vector2i, player: PlayerState) -> Array:
+	var forward = _get_matches_in_direction(board, col, row, direction.y, direction.x, player)
+	var backward = _get_matches_in_direction(board, col, row, -direction.y, -direction.x, player)
 	backward.reverse()
 	var all_matches = backward + [Vector2i(row, col)] + forward
 	return all_matches
 
 # Функция, собирающая подряд идущие ячейки с указанным токеном вдоль заданного направления
-func _get_matches_in_direction(board: Array, start_row: int, start_col: int, step_row: int, step_col: int, player: PlayerState) -> Array:
+func _get_matches_in_direction(board: Array, start_col: int, start_row: int, step_col: int, step_row: int, player: PlayerState) -> Array:
 	var current_row = start_row + step_row
 	var current_col = start_col + step_col
 	var matches = []
 	while current_row >= 0 and current_row < connect4.rows and current_col >= 0 and current_col < connect4.cols:
-		if board[current_row][current_col] != player:
+		if board[current_col][current_row] != player:
 			break
 		matches.append(Vector2i(current_row, current_col))
 		current_row += step_row
