@@ -94,7 +94,7 @@ func _simulate_move(board: Array, col: int, user: String) -> Vector2i:
 	for row in range(connect4.rows - 1, -1, -1):
 		if board[col][row] == connect4.PlayerState.EMPTY:
 			board[col][row] = player
-			return Vector2i(row, col)
+			return Vector2i(col, row)
 	return Vector2i(-1, -1)
 
 func _get_valid_moves(board: Array) -> Array:
