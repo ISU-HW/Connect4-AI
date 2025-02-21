@@ -74,45 +74,44 @@ func set_user_player(player):
 			turn_changed.emit()
 
 func drop_chip(user, col):
-	if not _is_valid_move(col) and not drop_chip_timer.time_left == 0:
+	if is_board_empty():
+		start.emit()
+		
+	if not drop_chip_timer.time_left == 0 or current_player != PlayerState.EMPTY and users[user] != current_player or not _is_valid_move(col):
 		not_valid_move.emit()
 		return false
 
-	if is_board_empty():
-		start.emit()
+	for row in range(rows - 1, -1, -1):
+		if game_board[col][row] == PlayerState.EMPTY:
+			drop_chip_timer.start()
+			game_board[col][row] = current_player
 
-	if users[user] == current_player:
-		for row in range(rows - 1, -1, -1):
-			if game_board[col][row] == PlayerState.EMPTY:
-				drop_chip_timer.start()
-				game_board[col][row] = current_player
+			last_move = Vector2i(row, col)
+			chip_dropped.emit(last_move, current_player)
 
-				last_move = Vector2i(row, col)
-				chip_dropped.emit(last_move, current_player)
+			win_chips = win_matches(game_board, row, col, current_player)
+			print(win_chips)
+			if win_chips:
+				player_winner = current_player
+				match player_winner:
+					users.PLAYER:
+						wins += 1
+					users.AI:
+						losses += 1
+				win.emit()
+				print("Player ", current_player, " wins!")
+			elif is_board_full():
+				current_player = PlayerState.EMPTY
+				player_winner = PlayerState.EMPTY
+				draws += 1
+				draw.emit()
+				print("A draw")
 
-				win_chips = win_matches(game_board, row, col, current_player)
-				print(win_chips)
-				if win_chips:
-					player_winner = current_player
-					match player_winner:
-						users.PLAYER:
-							wins += 1
-						users.AI:
-							losses += 1
-					win.emit()
-					print("Player ", current_player, " wins!")
-				elif is_board_full():
-					current_player = PlayerState.EMPTY
-					player_winner = PlayerState.EMPTY
-					draws += 1
-					draw.emit()
-					print("A draw")
+			_switch_turn()
+			_save_data()
+			return true
+	return false
 
-				_switch_turn()
-				_save_data()
-				return true
-		return false
-	
 func get_all_valid_moves() -> Array:
 	var valid_moves = []
 	for col in range(cols):
@@ -149,7 +148,7 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 
 #region Private Methods
 func _is_valid_move(col):
-	return player_winner == 0 and game_board[col][0] == PlayerState.EMPTY and col >= 0 and col < connect4.cols
+	return player_winner == PlayerState.EMPTY and game_board[col][0] == PlayerState.EMPTY and col >= 0 and col < connect4.cols
 
 func _switch_turn():
 	match current_player:
