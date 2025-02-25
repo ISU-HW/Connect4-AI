@@ -7,6 +7,7 @@ const CENTER_BONUS: float = 3.0
 var ai_player: AiPlayer
 var visualizer_enable: bool = false
 var depth_best_move: int
+var thread: Thread
 
 class AiPlayer:
 	signal minimax_calculated
@@ -24,6 +25,7 @@ class AiPlayer:
 	var best_score: float = self.best_score_default
 	var current_board: Array
 	var depth: int
+	var calculation_complete: bool = false
 	
 	func get_best_move(depth: int) -> int:
 		self.depth = depth
@@ -36,45 +38,55 @@ class AiPlayer:
 			return abs(a - center_col) < abs(b - center_col)
 		)
 		
-		_calculate_best_move.call_deferred(game_board_valid_moves)
-		return await move_calculated
+		calculation_complete = false
+		current_move_index = 0
+		best_score = -INF
+		
+		owner.thread = Thread.new()
+		owner.thread.start(_thread_calculate_best_move.bind(game_board_valid_moves))
+		
+		while not calculation_complete:
+			await owner.get_tree().process_frame
+		
+		return best_move
 	
-	func _calculate_best_move(valid_moves: Array) -> void:
-		while current_move_index < valid_moves.size():
-			var board_copy = current_board.duplicate(true)
-			var new_last_move = _simulate_move(board_copy, valid_moves[current_move_index], "AI")
-			last_moves["AI"] = new_last_move
+	func _thread_calculate_best_move(valid_moves: Array) -> void:
+		var thread_last_moves = last_moves.duplicate()
+		var thread_best_move = best_move_default
+		var thread_best_score = -INF
+		var thread_board = current_board.duplicate(true)
+		
+		for move_idx in range(valid_moves.size()):
+			var board_copy = thread_board.duplicate(true)
+			var new_last_move = _simulate_move(board_copy, valid_moves[move_idx], "AI")
+			thread_last_moves["AI"] = new_last_move
 			
 			if connect4.win_matches(board_copy, new_last_move.x, new_last_move.y, connect4.users["AI"]).size() > 0:
-				best_move = valid_moves[current_move_index]
+				thread_best_move = valid_moves[move_idx]
 				break
 
-			var score = await _calculate_minimax(board_copy, depth - 1, false, -INF, INF)
+			var score = _minimax(board_copy, depth - 1, false, -INF, INF, thread_last_moves)
 
-			if score >= best_score:
-				best_score = score
-				best_move = valid_moves[current_move_index]
-
-			current_move_index += 1
+			if score >= thread_best_score:
+				thread_best_score = score
+				thread_best_move = valid_moves[move_idx]
 		
+		call_deferred("_complete_calculation", thread_best_move)
+	
+	func _complete_calculation(result_move: int) -> void:
+		best_move = result_move
+		calculation_complete = true
 		move_calculated.emit(best_move)
-		
-		last_moves = self.last_moves_default
-		best_move = self.best_move_default
-		current_move_index = self.current_move_index_default
-		best_score = self.best_score_default
-
-	func _calculate_minimax(board: Array, depth: int, is_maximizing: bool, alpha: float, beta: float) -> float:
-		await owner.get_tree().process_frame
-		var board_value = _evaluate_board(board)
-		minimax_calculated.emit(board, board_value, is_maximizing)
-		
-		if _is_game_end() or depth == 0:
+	
+	func _minimax(board: Array, depth: int, is_maximizing: bool, alpha: float, beta: float, thread_last_moves: Dictionary) -> float:
+		var board_value = _evaluate_board(board, thread_last_moves)
+		minimax_calculated.emit(depth, board_value, is_maximizing, alpha, beta)
+		if _is_game_end(board, thread_last_moves) or depth == 0:
 			return board_value
 
 		var valid_moves = _get_valid_moves(board)
 		
-		# Оптимизация: сортируем ходы, начиная с центра
+		# Сортируем ходы, начиная с центра
 		var center_col = int(connect4.cols / 2)
 		valid_moves.sort_custom(func(a, b): 
 			return abs(a - center_col) < abs(b - center_col)
@@ -87,13 +99,13 @@ class AiPlayer:
 				var new_last_move = _simulate_move(board_copy, col, "AI")
 				
 				# Сохраняем предыдущее значение для восстановления
-				var prev_last_move = last_moves["AI"]
-				last_moves["AI"] = new_last_move
+				var prev_last_move = thread_last_moves["AI"]
+				thread_last_moves["AI"] = new_last_move
 
-				var eval = await _calculate_minimax(board_copy, depth - 1, false, alpha, beta)
+				var eval = _minimax(board_copy, depth - 1, false, alpha, beta, thread_last_moves)
 				
 				# Восстанавливаем предыдущее значение
-				last_moves["AI"] = prev_last_move
+				thread_last_moves["AI"] = prev_last_move
 				
 				max_eval = max(max_eval, eval)
 				alpha = max(alpha, eval)
@@ -109,13 +121,13 @@ class AiPlayer:
 				var new_last_move = _simulate_move(board_copy, col, "PLAYER")
 				
 				# Сохраняем предыдущее значение для восстановления
-				var prev_last_move = last_moves["PLAYER"]
-				last_moves["PLAYER"] = new_last_move
+				var prev_last_move = thread_last_moves["PLAYER"]
+				thread_last_moves["PLAYER"] = new_last_move
 
-				var eval = await _calculate_minimax(board_copy, depth - 1, true, alpha, beta)
+				var eval = _minimax(board_copy, depth - 1, true, alpha, beta, thread_last_moves)
 				
 				# Восстанавливаем предыдущее значение
-				last_moves["PLAYER"] = prev_last_move
+				thread_last_moves["PLAYER"] = prev_last_move
 				
 				min_eval = min(min_eval, eval)
 				beta = min(beta, eval)
@@ -140,34 +152,34 @@ class AiPlayer:
 				valid_moves.append(col)
 		return valid_moves
 
-	func _is_game_end() -> bool:
-		return (connect4.win_matches(current_board, last_moves["AI"].x, last_moves["AI"].y, connect4.users["AI"]).size() > 0 or
-				connect4.win_matches(current_board, last_moves["PLAYER"].x, last_moves["PLAYER"].y, connect4.users["PLAYER"]).size() > 0 or
-				_get_valid_moves(current_board).is_empty())
+	func _is_game_end(board: Array, thread_last_moves: Dictionary) -> bool:
+		return (connect4.win_matches(board, thread_last_moves["AI"].x, thread_last_moves["AI"].y, connect4.users["AI"]).size() > 0 or
+				connect4.win_matches(board, thread_last_moves["PLAYER"].x, thread_last_moves["PLAYER"].y, connect4.users["PLAYER"]).size() > 0 or
+				_get_valid_moves(board).is_empty())
 
-	func _evaluate_board(board: Array) -> float:
-		if connect4.win_matches(board, last_moves["AI"].x, last_moves["AI"].y, connect4.users["AI"]).size() > 0:
+	func _evaluate_board(board: Array, thread_last_moves: Dictionary) -> float:
+		if connect4.win_matches(board, thread_last_moves["AI"].x, thread_last_moves["AI"].y, connect4.users["AI"]).size() > 0:
 			return WIN_SCORE
-		if connect4.win_matches(board, last_moves["PLAYER"].x, last_moves["PLAYER"].y, connect4.users["PLAYER"]).size() > 0:
+		if connect4.win_matches(board, thread_last_moves["PLAYER"].x, thread_last_moves["PLAYER"].y, connect4.users["PLAYER"]).size() > 0:
 			return LOSE_SCORE
 
 		var score: float = 0.0
 		
 		# 1. Оценка контроля центра (с убывающим весом)
-		#var center_col = int(connect4.cols / 2)
-		#for row in range(connect4.rows):
-			#if board[center_col][row] == connect4.users["AI"]:
-				## Выше расположенные фишки ценнее (ближе к верху)
-				#score += CENTER_BONUS * (1.0 + float(connect4.rows - row) / connect4.rows)
-			#elif board[center_col][row] == connect4.users["PLAYER"]:
-				## Штраф за контроль центра противником
-				#score -= CENTER_BONUS * 0.8 * (1.0 + float(connect4.rows - row) / connect4.rows)
+		var center_col = int(connect4.cols / 2)
+		for row in range(connect4.rows):
+			if board[center_col][row] == connect4.users["AI"]:
+				# Выше расположенные фишки ценнее (ближе к верху)
+				score += CENTER_BONUS * (1.0 + float(connect4.rows - row) / connect4.rows)
+			elif board[center_col][row] == connect4.users["PLAYER"]:
+				# Штраф за контроль центра противником
+				score -= CENTER_BONUS * 0.8 * (1.0 + float(connect4.rows - row) / connect4.rows)
 
 		# 2. Оценка всей доски с весами позиций
 		for col in range(connect4.cols):
 			for row in range(connect4.rows):
 				# Позиционный вес: центр ценнее краев
-				var position_weight = 1.0 - col
+				var position_weight = 1.0 - (abs(col - center_col) / float(max(1, center_col)))
 				
 				# Оценка по горизонтали
 				if col <= connect4.cols - 4:
@@ -324,7 +336,7 @@ func _ready() -> void:
 	connect4.turn_changed.connect(_on_turn_changed)
 	connect4.start.connect(_on_start.bind(depth_best_move_ui))
 	ai_player = AiPlayer.new()
-	ai_player.owner = get_parent()
+	ai_player.owner = self
 	if visualizer_enable:
 		var visualizer = DecisionTreeVisualizer.new()
 		add_child(visualizer)
@@ -341,3 +353,7 @@ func _on_turn_changed():
 		if connect4.player_winner == connect4.PlayerState.EMPTY:
 			var best_move = await ai_player.get_best_move(depth_best_move)
 			connect4.drop_chip("AI", best_move)
+
+func _exit_tree():
+	if thread and thread.is_started():
+		thread.wait_to_finish()
