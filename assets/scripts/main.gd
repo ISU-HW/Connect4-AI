@@ -44,7 +44,14 @@ func _process_input_actions():
 		get_tree().quit()
 		
 	if Input.is_action_just_pressed(_restart_game_action):
+		if not connect4.is_game_started():
+			return
+			
+		if not connect4.is_game_ended():
+			connect4.losses += 1
+			connect4._save_data()
 		connect4.restart_game()
+		
 	for i in range(7):
 		if Input.is_action_just_pressed(_drop_chip_action + str(i + 1)):
 			connect4.drop_chip("PLAYER", i)

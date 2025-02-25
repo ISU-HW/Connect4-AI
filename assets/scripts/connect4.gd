@@ -59,6 +59,16 @@ func _create_board():
 #endregion
 
 #region Public Methods
+func is_game_started():
+	if not is_board_empty() and not is_board_full() and player_winner == PlayerState.EMPTY:
+		return true
+	return false
+	
+func is_game_ended():
+	if player_winner != PlayerState.EMPTY or is_board_full():
+		return true
+	return false
+
 func restart_game():
 	_setup_game_state()
 	_create_board()
