@@ -330,6 +330,6 @@ func _on_turn_changed():
 		if connect4.drop_chip_timer.time_left > 0:
 			await connect4.drop_chip_timer.timeout
 		
-		var best_move = await ai_player.get_best_move(4)
-		print(best_move)
-		connect4.drop_chip("AI", best_move)
+		if connect4.player_winner == connect4.PlayerState.EMPTY:
+			var best_move = await ai_player.get_best_move(2)
+			connect4.drop_chip("AI", best_move)

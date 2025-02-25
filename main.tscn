@@ -119,6 +119,37 @@ func fade_out() -> void:
 	tween.tween_property(self, \"modulate:a\", 0.0, transition_duration)
 "
 
+[sub_resource type="GDScript" id="GDScript_gqlwu"]
+script/source = "extends Control
+
+@export var transition_duration = 0.1
+
+var tween
+
+func _ready() -> void:
+	connect4.start.connect(fade_out)
+
+func fade_out() -> void:
+	if tween:
+		tween.kill()
+	tween = create_tween()
+	tween.tween_property(self, \"modulate:a\", 0.0, transition_duration).set_ease(Tween.EASE_IN)
+	await tween.finished
+	visible = false
+
+func zoom_out() -> void:
+	if tween:
+		tween.kill()
+	tween = create_tween()
+	tween.tween_property(self, \"scale\", Vector2(0.0, 0.0), transition_duration).set_ease(Tween.EASE_IN)
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_4u2jv"]
+font = ExtResource("12_jkivn")
+font_size = 32
+shadow_size = 3
+shadow_color = Color(0, 0, 0, 0.5)
+
 [sub_resource type="GDScript" id="GDScript_b86cp"]
 script/source = "extends Control
 
@@ -264,37 +295,6 @@ func _on_pressed():
 	connect4.restart_game()
 "
 
-[sub_resource type="GDScript" id="GDScript_gqlwu"]
-script/source = "extends Control
-
-@export var transition_duration = 0.1
-
-var tween
-
-func _ready() -> void:
-	connect4.start.connect(fade_out)
-
-func fade_out() -> void:
-	if tween:
-		tween.kill()
-	tween = create_tween()
-	tween.tween_property(self, \"modulate:a\", 0.0, transition_duration).set_ease(Tween.EASE_IN)
-	await tween.finished
-	visible = false
-
-func zoom_out() -> void:
-	if tween:
-		tween.kill()
-	tween = create_tween()
-	tween.tween_property(self, \"scale\", Vector2(0.0, 0.0), transition_duration).set_ease(Tween.EASE_IN)
-"
-
-[sub_resource type="LabelSettings" id="LabelSettings_4u2jv"]
-font = ExtResource("12_jkivn")
-font_size = 32
-shadow_size = 3
-shadow_color = Color(0, 0, 0, 0.5)
-
 [node name="Main" type="Node3D"]
 script = ExtResource("1_jf73m")
 
@@ -437,122 +437,6 @@ layout_mode = 2
 size_flags_horizontal = 6
 player = 2
 
-[node name="win_menu" type="Control" parent="."]
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-script = SubResource("GDScript_b86cp")
-
-[node name="ColorRect" type="ColorRect" parent="win_menu"]
-material = SubResource("ShaderMaterial_44law")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.392157)
-
-[node name="CenterContainer" type="CenterContainer" parent="win_menu"]
-layout_mode = 2
-offset_left = 416.0
-offset_top = 58.0
-offset_right = 736.0
-offset_bottom = 589.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="win_menu/CenterContainer"]
-layout_mode = 2
-
-[node name="HSplitContainer" type="HSplitContainer" parent="win_menu/CenterContainer/VBoxContainer"]
-layout_mode = 2
-dragger_visibility = 1
-
-[node name="Your stats" type="Label" parent="win_menu/CenterContainer/VBoxContainer/HSplitContainer"]
-custom_minimum_size = Vector2(100, 0)
-layout_mode = 2
-size_flags_horizontal = 0
-text = "Your stats
-Winrate — %{winrate}
-Wins — {wins}
-Losses — {losses}
-Draws — {draws}  
-Games — {games}"
-label_settings = SubResource("LabelSettings_s07vk")
-script = SubResource("GDScript_yd5fm")
-
-[node name="AI stats" type="Label" parent="win_menu/CenterContainer/VBoxContainer/HSplitContainer"]
-custom_minimum_size = Vector2(100, 0)
-layout_mode = 2
-size_flags_horizontal = 8
-text = "AI stats
-{winrate}% — Winrate
-{wins} — Wins
-{losses} — Losses
-{draws} — Draws
-{games} — Games"
-label_settings = SubResource("LabelSettings_8e80f")
-horizontal_alignment = 2
-script = SubResource("GDScript_gy4i6")
-
-[node name="Winner\'s chip" type="SubViewportContainer" parent="win_menu/CenterContainer/VBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 0
-
-[node name="SubViewport" type="SubViewport" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip"]
-own_world_3d = true
-transparent_bg = true
-handle_input_locally = false
-size = Vector2i(256, 256)
-render_target_update_mode = 0
-
-[node name="Piece" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport" instance=ExtResource("8_c4b2j")]
-transform = Transform3D(-0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, -0.198267, -0.739942, 0, 13, -3.297)
-axis_lock_linear_y = true
-gravity_scale = 0.0
-script = SubResource("GDScript_l7nte")
-
-[node name="Camera3D" type="Camera3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 13, -6.17877)
-environment = SubResource("Environment_2cm4a")
-
-[node name="OmniLight3D" type="OmniLight3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 2, 10, -6)
-visible = false
-light_energy = 20.0
-
-[node name="OmniLight3D2" type="OmniLight3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -2, 10, -6)
-visible = false
-light_energy = 20.0
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
-transform = Transform3D(-1, -2.99003e-08, 8.21505e-08, 0, 0.939692, 0.34202, -8.74228e-08, 0.34202, -0.939692, 0, 0, 0)
-light_energy = 1.5
-
-[node name="player wins" type="Label" parent="win_menu/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-text = "Who's wins?"
-label_settings = SubResource("LabelSettings_17xiu")
-horizontal_alignment = 1
-script = SubResource("GDScript_8rw8j")
-
-[node name="Button" type="Button" parent="win_menu/CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-tooltip_text = "[R]"
-theme_override_fonts/font = ExtResource("12_jkivn")
-theme_override_font_sizes/font_size = 22
-text = "Restart"
-script = SubResource("GDScript_x3p5e")
-
 [node name="choose_menu" type="Panel" parent="."]
 self_modulate = Color(1, 1, 1, 0.498039)
 anchors_preset = 15
@@ -601,3 +485,123 @@ expand_mode = 1
 layout_mode = 1
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]
+
+[node name="win_menu" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_b86cp")
+
+[node name="ColorRect" type="ColorRect" parent="win_menu"]
+material = SubResource("ShaderMaterial_44law")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.392157)
+
+[node name="CenterContainer" type="CenterContainer" parent="win_menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -265.5
+offset_right = 160.0
+offset_bottom = 265.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="win_menu/CenterContainer"]
+layout_mode = 2
+
+[node name="HSplitContainer" type="HSplitContainer" parent="win_menu/CenterContainer/VBoxContainer"]
+layout_mode = 2
+dragger_visibility = 1
+
+[node name="Your stats" type="Label" parent="win_menu/CenterContainer/VBoxContainer/HSplitContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Your stats
+Winrate — %{winrate}
+Wins — {wins}
+Losses — {losses}
+Draws — {draws}  
+Games — {games}"
+label_settings = SubResource("LabelSettings_s07vk")
+script = SubResource("GDScript_yd5fm")
+
+[node name="AI stats" type="Label" parent="win_menu/CenterContainer/VBoxContainer/HSplitContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+text = "AI stats
+{winrate}% — Winrate
+{wins} — Wins
+{losses} — Losses
+{draws} — Draws
+{games} — Games"
+label_settings = SubResource("LabelSettings_8e80f")
+horizontal_alignment = 2
+script = SubResource("GDScript_gy4i6")
+
+[node name="Winner\'s chip" type="SubViewportContainer" parent="win_menu/CenterContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+
+[node name="SubViewport" type="SubViewport" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip"]
+own_world_3d = true
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(256, 256)
+render_target_update_mode = 4
+
+[node name="Piece" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport" instance=ExtResource("8_c4b2j")]
+transform = Transform3D(-0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, -0.198267, -0.739942, 0, 13, -3.297)
+axis_lock_linear_y = true
+gravity_scale = 0.0
+script = SubResource("GDScript_l7nte")
+
+[node name="Camera3D" type="Camera3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 13, -6.17877)
+environment = SubResource("Environment_2cm4a")
+
+[node name="OmniLight3D" type="OmniLight3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 2, 10, -6)
+visible = false
+light_energy = 20.0
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -2, 10, -6)
+visible = false
+light_energy = 20.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport"]
+transform = Transform3D(-1, -2.99003e-08, 8.21505e-08, 0, 0.939692, 0.34202, -8.74228e-08, 0.34202, -0.939692, 0, 0, 0)
+light_energy = 1.5
+
+[node name="player wins" type="Label" parent="win_menu/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+text = "Who's wins?"
+label_settings = SubResource("LabelSettings_17xiu")
+horizontal_alignment = 1
+script = SubResource("GDScript_8rw8j")
+
+[node name="Button" type="Button" parent="win_menu/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+tooltip_text = "[R]"
+theme_override_fonts/font = ExtResource("12_jkivn")
+theme_override_font_sizes/font_size = 22
+text = "Restart"
+script = SubResource("GDScript_x3p5e")
