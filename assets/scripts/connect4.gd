@@ -26,6 +26,7 @@ var last_move: Vector2i
 var wins: int = 0
 var losses: int = 0
 var draws: int = 0
+
 #region Game Initializing
 func _ready():
 	_load_data()
@@ -87,7 +88,7 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 			return matches
 	return []  # Если ни в одном направлении не найдено 4-х подряд
 
-func drop_chip(user, col):
+func drop_chip(user: String, col: int):
 	if is_board_empty():
 		start.emit()
 		

@@ -330,7 +330,7 @@ func _ready() -> void:
 		add_child(visualizer)
 
 func _on_start(depth_best_move_ui):
-	if depth_best_move_ui:
+	if depth_best_move_ui != null:
 		depth_best_move_ui.apply()
 		depth_best_move = int(depth_best_move_ui.get_line_edit().text)
 
