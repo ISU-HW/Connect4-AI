@@ -5,6 +5,9 @@ const LOSE_SCORE: float = -1000000
 const CENTER_BONUS: float = 3.0
 
 var ai_player: AiPlayer
+var visualizer_enable: bool = false
+var depth_best_move: int
+var depth_best_move_ui: SpinBox
 
 class AiPlayer:
 	signal minimax_calculated
@@ -64,7 +67,6 @@ class AiPlayer:
 
 	func _calculate_minimax(board: Array, depth: int, is_maximizing: bool, alpha: float, beta: float) -> float:
 		await owner.get_tree().process_frame
-		
 		var board_value = _evaluate_board(board)
 		minimax_calculated.emit(board, board_value, is_maximizing)
 		
@@ -320,16 +322,23 @@ class AiPlayer:
 
 func _ready() -> void:
 	connect4.turn_changed.connect(_on_turn_changed)
+	connect4.start.connect(_on_start)
 	ai_player = AiPlayer.new()
 	ai_player.owner = get_parent()
-	var visualizer = DecisionTreeVisualizer.new()
-	add_child(visualizer)
+	depth_best_move_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/Control/depth_best_move
+	if visualizer_enable:
+		var visualizer = DecisionTreeVisualizer.new()
+		add_child(visualizer)
+
+func _on_start():
+	if depth_best_move_ui:
+		depth_best_move_ui.apply()
+		depth_best_move = int(depth_best_move_ui.get_line_edit().text)
 
 func _on_turn_changed():
 	if connect4.current_player == connect4.users["AI"]:
 		if connect4.drop_chip_timer.time_left > 0:
 			await connect4.drop_chip_timer.timeout
-		
 		if connect4.player_winner == connect4.PlayerState.EMPTY:
-			var best_move = await ai_player.get_best_move(2)
+			var best_move = await ai_player.get_best_move(depth_best_move)
 			connect4.drop_chip("AI", best_move)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=40 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
@@ -38,6 +38,13 @@ glow_hdr_scale = 4.0
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6ifjb"]
 bounce = 0.2
+
+[sub_resource type="TextMesh" id="TextMesh_6bjdu"]
+text = "1       2      3      4      5      6       7       "
+font = ExtResource("12_jkivn")
+font_size = 127
+horizontal_alignment = 2
+depth = 0.1
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ob2yj"]
 size = Vector3(12, 1, 2)
@@ -331,6 +338,10 @@ unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.902, 0, -2.602)
 physics_material_override = SubResource("PhysicsMaterial_6ifjb")
 
+[node name="numbers" type="MeshInstance3D" parent="Board"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 13.5, 2.102)
+mesh = SubResource("TextMesh_6bjdu")
+
 [node name="stopline" type="CollisionShape3D" parent="Board"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.923, 2.383, 2.545)
 shape = SubResource("BoxShape3D_ob2yj")
@@ -437,7 +448,7 @@ layout_mode = 2
 size_flags_horizontal = 6
 player = 2
 
-[node name="choose_menu" type="Panel" parent="."]
+[node name="start_menu" type="Panel" parent="."]
 self_modulate = Color(1, 1, 1, 0.498039)
 anchors_preset = 15
 anchor_right = 1.0
@@ -446,7 +457,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = SubResource("GDScript_gqlwu")
 
-[node name="Choose color" type="Label" parent="choose_menu"]
+[node name="Choose color" type="Label" parent="start_menu"]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -464,7 +475,7 @@ label_settings = SubResource("LabelSettings_4u2jv")
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="Buttons" type="TextureRect" parent="choose_menu"]
+[node name="Buttons" type="TextureRect" parent="start_menu"]
 clip_children = 1
 layout_mode = 1
 anchors_preset = 8
@@ -481,12 +492,52 @@ grow_vertical = 2
 texture = ExtResource("13_7sh41")
 expand_mode = 1
 
-[node name="HSplitContainer" parent="choose_menu/Buttons" instance=ExtResource("13_ohaa6")]
+[node name="HSplitContainer" parent="start_menu/Buttons" instance=ExtResource("13_ohaa6")]
 layout_mode = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="start_menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Container" type="Control" parent="start_menu/CenterContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="start_menu/CenterContainer/Container"]
+layout_mode = 0
+offset_left = -93.0
+offset_top = 150.0
+offset_right = 92.0
+offset_bottom = 181.0
+pivot_offset = Vector2(0, -0.154999)
+
+[node name="Control" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
+layout_mode = 2
+dragger_visibility = 2
+
+[node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/Control"]
+layout_mode = 2
+text = "AI Difficult     "
+
+[node name="depth_best_move" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/Control"]
+layout_mode = 2
+min_value = 1.0
+max_value = 7.0
+value = 4.0
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]
 
 [node name="win_menu" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -503,7 +554,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.392157)
+color = Color(0, 0, 0, 0.588235)
 
 [node name="CenterContainer" type="CenterContainer" parent="win_menu"]
 layout_mode = 1
@@ -563,7 +614,7 @@ own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(256, 256)
-render_target_update_mode = 4
+render_target_update_mode = 0
 
 [node name="Piece" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport" instance=ExtResource("8_c4b2j")]
 transform = Transform3D(-0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, -0.198267, -0.739942, 0, 13, -3.297)
