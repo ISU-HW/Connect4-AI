@@ -531,7 +531,7 @@ text = "AI Difficult     "
 [node name="depth_best_move" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/Control"]
 layout_mode = 2
 min_value = 1.0
-max_value = 7.0
+max_value = 10.0
 value = 4.0
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]

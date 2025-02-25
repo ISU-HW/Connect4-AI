@@ -7,7 +7,6 @@ const CENTER_BONUS: float = 3.0
 var ai_player: AiPlayer
 var visualizer_enable: bool = false
 var depth_best_move: int
-var depth_best_move_ui: SpinBox
 
 class AiPlayer:
 	signal minimax_calculated
@@ -155,20 +154,20 @@ class AiPlayer:
 		var score: float = 0.0
 		
 		# 1. Оценка контроля центра (с убывающим весом)
-		var center_col = int(connect4.cols / 2)
-		for row in range(connect4.rows):
-			if board[center_col][row] == connect4.users["AI"]:
-				# Выше расположенные фишки ценнее (ближе к верху)
-				score += CENTER_BONUS * (1.0 + float(connect4.rows - row) / connect4.rows)
-			elif board[center_col][row] == connect4.users["PLAYER"]:
-				# Штраф за контроль центра противником
-				score -= CENTER_BONUS * 0.8 * (1.0 + float(connect4.rows - row) / connect4.rows)
+		#var center_col = int(connect4.cols / 2)
+		#for row in range(connect4.rows):
+			#if board[center_col][row] == connect4.users["AI"]:
+				## Выше расположенные фишки ценнее (ближе к верху)
+				#score += CENTER_BONUS * (1.0 + float(connect4.rows - row) / connect4.rows)
+			#elif board[center_col][row] == connect4.users["PLAYER"]:
+				## Штраф за контроль центра противником
+				#score -= CENTER_BONUS * 0.8 * (1.0 + float(connect4.rows - row) / connect4.rows)
 
 		# 2. Оценка всей доски с весами позиций
 		for col in range(connect4.cols):
 			for row in range(connect4.rows):
 				# Позиционный вес: центр ценнее краев
-				var position_weight = 1.0 - (abs(col - center_col) / float(max(1, center_col)))
+				var position_weight = 1.0 - col
 				
 				# Оценка по горизонтали
 				if col <= connect4.cols - 4:
@@ -321,16 +320,16 @@ class AiPlayer:
 		return threat_count
 
 func _ready() -> void:
+	var depth_best_move_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/Control/depth_best_move
 	connect4.turn_changed.connect(_on_turn_changed)
-	connect4.start.connect(_on_start)
+	connect4.start.connect(_on_start.bind(depth_best_move_ui))
 	ai_player = AiPlayer.new()
 	ai_player.owner = get_parent()
-	depth_best_move_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/Control/depth_best_move
 	if visualizer_enable:
 		var visualizer = DecisionTreeVisualizer.new()
 		add_child(visualizer)
 
-func _on_start():
+func _on_start(depth_best_move_ui):
 	if depth_best_move_ui:
 		depth_best_move_ui.apply()
 		depth_best_move = int(depth_best_move_ui.get_line_edit().text)
