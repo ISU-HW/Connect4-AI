@@ -72,6 +72,20 @@ func set_user_player(player):
 			users["PLAYER"] = PlayerState.PLAYER2
 			users["AI"] = PlayerState.PLAYER1
 			turn_changed.emit()
+			
+func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array:
+	const directions = [
+		Vector2i(1, 0),    # вертикаль
+		Vector2i(0, 1),    # горизонталь
+		Vector2i(1, 1),    # диагональ по нисходящей
+		Vector2i(1, -1)    # диагональ по восходящей
+	]
+	
+	for direction in directions:
+		var matches = _win_matches_in_direction(board, col, row, direction, player)
+		if matches.size() >= 4:
+			return matches
+	return []  # Если ни в одном направлении не найдено 4-х подряд
 
 func drop_chip(user, col):
 	if is_board_empty():
@@ -130,20 +144,6 @@ func is_board_empty() -> bool:
 		if PlayerState.PLAYER1 in col or PlayerState.PLAYER2 in col:
 			return false
 	return true
-	
-func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array:
-	const directions = [
-		Vector2i(1, 0),    # вертикаль
-		Vector2i(0, 1),    # горизонталь
-		Vector2i(1, 1),    # диагональ по нисходящей
-		Vector2i(1, -1)    # диагональ по восходящей
-	]
-	
-	for direction in directions:
-		var matches = _win_matches_in_direction(board, col, row, direction, player)
-		if matches.size() >= 4:
-			return matches
-	return []  # Если ни в одном направлении не найдено 4-х подряд
 #endregion
 
 #region Private Methods

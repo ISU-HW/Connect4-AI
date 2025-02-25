@@ -20,7 +20,7 @@ config/icon="res://icon.svg"
 
 connect4="*res://assets/scripts/connect4.gd"
 Mousehandler="res://assets/scripts/mousehandler.gd"
-AiUser="*res://assets/scripts/ai_user.gd"
+AiUser="*res://assets/scripts/ai_player.gd"
 
 [display]
 

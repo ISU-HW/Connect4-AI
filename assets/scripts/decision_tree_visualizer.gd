@@ -26,14 +26,14 @@ class TreeNode:
 		is_maximizing = max_player
 
 var root: TreeNode
+var minimax: Node
 var total_width: float = 0
 var max_depth: int = 0
-var ai_script: Node
 var current_depth: int = 3  
 
 func _ready():
-	ai_script = get_parent()
-	ai_script.minimax_calculated.connect(_on_minimax_calculated)
+	minimax = get_parent()
+	minimax.ai_player.minimax_calculated.connect(_on_minimax_calculated)
 	connect4.start.connect(_on_game_started)
 	connect4.turn_changed.connect(_on_turn_changed)
 	get_tree().root.size_changed.connect(_on_window_resize)
