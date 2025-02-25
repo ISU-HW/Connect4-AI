@@ -27,6 +27,13 @@ class AiPlayer:
 		self.depth = depth
 		self.current_board = connect4.game_board.duplicate(true)
 		var game_board_valid_moves = connect4.get_all_valid_moves()
+		
+		# Сортировка ходов
+		var center_col = int(connect4.cols / 2)
+		game_board_valid_moves.sort_custom(func(a, b): 
+			return abs(a - center_col) < abs(b - center_col)
+		)
+		
 		_calculate_best_move.call_deferred(game_board_valid_moves)
 		return await move_calculated
 	
@@ -35,6 +42,10 @@ class AiPlayer:
 			var board_copy = current_board.duplicate(true)
 			var new_last_move = _simulate_move(board_copy, valid_moves[current_move_index], "AI")
 			last_moves["AI"] = new_last_move
+			
+			if connect4.win_matches(board_copy, new_last_move.x, new_last_move.y, connect4.users["AI"]).size() > 0:
+				best_move = valid_moves[current_move_index]
+				break
 
 			var score = await _calculate_minimax(board_copy, depth - 1, false, -INF, INF)
 
@@ -61,32 +72,56 @@ class AiPlayer:
 			return board_value
 
 		var valid_moves = _get_valid_moves(board)
+		
+		# Оптимизация: сортируем ходы, начиная с центра
+		var center_col = int(connect4.cols / 2)
+		valid_moves.sort_custom(func(a, b): 
+			return abs(a - center_col) < abs(b - center_col)
+		)
 
 		if is_maximizing:
 			var max_eval = -INF
 			for col in valid_moves:
-				var new_last_move = _simulate_move(board, col, "AI")
+				var board_copy = board.duplicate(true)
+				var new_last_move = _simulate_move(board_copy, col, "AI")
+				
+				# Сохраняем предыдущее значение для восстановления
+				var prev_last_move = last_moves["AI"]
 				last_moves["AI"] = new_last_move
 
-				var eval = await _calculate_minimax(board, depth - 1, false, alpha, beta)
+				var eval = await _calculate_minimax(board_copy, depth - 1, false, alpha, beta)
+				
+				# Восстанавливаем предыдущее значение
+				last_moves["AI"] = prev_last_move
+				
 				max_eval = max(max_eval, eval)
 				alpha = max(alpha, eval)
 
 				if beta <= alpha:
-					break
+					break  # Отсечение альфа
+					
 			return max_eval
 		else:
 			var min_eval = INF
 			for col in valid_moves:
-				var new_last_move = _simulate_move(board, col, "PLAYER")
+				var board_copy = board.duplicate(true)
+				var new_last_move = _simulate_move(board_copy, col, "PLAYER")
+				
+				# Сохраняем предыдущее значение для восстановления
+				var prev_last_move = last_moves["PLAYER"]
 				last_moves["PLAYER"] = new_last_move
 
-				var eval = await _calculate_minimax(board, depth - 1, true, alpha, beta)
+				var eval = await _calculate_minimax(board_copy, depth - 1, true, alpha, beta)
+				
+				# Восстанавливаем предыдущее значение
+				last_moves["PLAYER"] = prev_last_move
+				
 				min_eval = min(min_eval, eval)
 				beta = min(beta, eval)
 
 				if beta <= alpha:
-					break
+					break  # Отсечение бета
+					
 			return min_eval
 
 	func _simulate_move(board: Array, col: int, user: String) -> Vector2i:
@@ -116,41 +151,54 @@ class AiPlayer:
 			return LOSE_SCORE
 
 		var score: float = 0.0
-
-		# Бонус за центр доски
+		
+		# 1. Оценка контроля центра (с убывающим весом)
 		var center_col = int(connect4.cols / 2)
-		var center_count = 0
 		for row in range(connect4.rows):
 			if board[center_col][row] == connect4.users["AI"]:
-				center_count += 1
-		score += center_count * CENTER_BONUS
+				# Выше расположенные фишки ценнее (ближе к верху)
+				score += CENTER_BONUS * (1.0 + float(connect4.rows - row) / connect4.rows)
+			elif board[center_col][row] == connect4.users["PLAYER"]:
+				# Штраф за контроль центра противником
+				score -= CENTER_BONUS * 0.8 * (1.0 + float(connect4.rows - row) / connect4.rows)
 
-		# Подсчёт потенциальных победных комбинаций
+		# 2. Оценка всей доски с весами позиций
 		for col in range(connect4.cols):
 			for row in range(connect4.rows):
+				# Позиционный вес: центр ценнее краев
+				var position_weight = 1.0 - (abs(col - center_col) / float(max(1, center_col)))
+				
+				# Оценка по горизонтали
 				if col <= connect4.cols - 4:
 					var window = []
 					for i in range(4):
 						window.append(board[col + i][row])
-					score += _evaluate_window(window)
-
+					score += _evaluate_window(window) * position_weight
+					
+				# Оценка по вертикали
 				if row <= connect4.rows - 4:
 					var window = []
 					for i in range(4):
 						window.append(board[col][row + i])
-					score += _evaluate_window(window)
-
+					score += _evaluate_window(window) * position_weight
+					
+				# Оценка по диагонали (↘)
 				if col <= connect4.cols - 4 and row <= connect4.rows - 4:
 					var window = []
 					for i in range(4):
 						window.append(board[col + i][row + i])
-					score += _evaluate_window(window)
-
+					score += _evaluate_window(window) * position_weight
+					
+				# Оценка по диагонали (↗)
 				if col >= 3 and row <= connect4.rows - 4:
 					var window = []
 					for i in range(4):
 						window.append(board[col - i][row + i])
-					score += _evaluate_window(window)
+					score += _evaluate_window(window) * position_weight
+					
+		# 3. Оценка форк-угроз
+		score += _evaluate_fork_threats(board)
+					
 		return score
 
 	func _evaluate_window(window: Array) -> float:
@@ -158,20 +206,117 @@ class AiPlayer:
 		var ai_count = window.count(connect4.users["AI"])
 		var player_count = window.count(connect4.users["PLAYER"])
 		var empty_count = window.count(connect4.PlayerState.EMPTY)
-
-		if ai_count == 4:
-			score += WIN_SCORE
-		elif ai_count == 3 and empty_count == 1:
-			score += 100
-		elif ai_count == 2 and empty_count == 2:
-			score += 10
-
-		if player_count == 4:
-			score -= LOSE_SCORE
-		elif player_count == 3 and empty_count == 1:
-			score -= 90
-
+		
+		# Если в окне есть фишки обоих игроков, это не представляет угрозы
+		if ai_count > 0 and player_count > 0:
+			return 0.0
+			
+		# Оценка для AI
+		if ai_count > 0 and player_count == 0:
+			if ai_count == 4:
+				score += WIN_SCORE
+			elif ai_count == 3 and empty_count == 1:
+				score += 150.0  # Повышен вес для 3 в ряд
+			elif ai_count == 2 and empty_count == 2:
+				score += 20.0   # Повышен вес для 2 в ряд
+			elif ai_count == 1 and empty_count == 3:
+				score += 1.0    # Небольшой бонус за одну фишку
+				
+		# Оценка для игрока (защита)
+		if player_count > 0 and ai_count == 0:
+			if player_count == 4:
+				score -= LOSE_SCORE
+			elif player_count == 3 and empty_count == 1:
+				score -= 180.0  # Повышенный штраф, чтобы блокировать угрозы противника
+			elif player_count == 2 and empty_count == 2:
+				score -= 15.0   # Штраф за потенциальную угрозу
+				
 		return score
+		
+	func _evaluate_fork_threats(board: Array) -> float:
+		var score: float = 0.0
+		var threats = []
+		var valid_moves = _get_valid_moves(board)
+		
+		# Проверка наличия форк-угроз (двойных угроз)
+		for col in valid_moves:
+			var temp_board = board.duplicate(true)
+			var move_pos = _simulate_move(temp_board, col, "AI")
+			
+			if move_pos.x == -1:  # Недействительный ход
+				continue
+				
+			# Проверяем количество угроз "3 в ряд"
+			var threat_count = _count_win_threats(temp_board, move_pos, "AI")
+			
+			# Если создаем две или более угрозы, это форкинг
+			if threat_count >= 2:
+				score += 300.0
+				threats.append(Vector2(col, move_pos.y))
+			
+			# Отменяем ход
+			temp_board[move_pos.x][move_pos.y] = connect4.PlayerState.EMPTY
+			
+			# Теперь проверяем угрозы форкинга игрока, чтобы их блокировать
+			move_pos = _simulate_move(temp_board, col, "PLAYER")
+			
+			if move_pos.x != -1:
+				var player_threat_count = _count_win_threats(temp_board, move_pos, "PLAYER")
+				
+				if player_threat_count >= 2:
+					score -= 350.0  # Высокий штраф за возможный форкинг противника
+		
+		# Бонус за создание нескольких точек форкинга
+		score += min(threats.size(), 3) * 50.0
+		
+		return score
+		
+	func _count_win_threats(board: Array, pos: Vector2i, player: String) -> int:
+		var threat_count = 0
+		var player_state = connect4.users[player]
+		
+		# Проверяем все направления для поиска потенциальных "3 в ряд"
+		# Горизонтальные угрозы
+		for c in range(max(0, pos.x - 3), min(connect4.cols - 3, pos.x + 1)):
+			var window = []
+			for i in range(4):
+				window.append(board[c + i][pos.y])
+			if window.count(player_state) == 3 and window.count(connect4.PlayerState.EMPTY) == 1:
+				threat_count += 1
+		
+		# Вертикальные угрозы (только вниз)
+		if pos.y <= connect4.rows - 4:
+			var window = []
+			for i in range(4):
+				window.append(board[pos.x][pos.y + i])
+			if window.count(player_state) == 3 and window.count(connect4.PlayerState.EMPTY) == 1:
+				threat_count += 1
+		
+		# Диагональные угрозы (↘)
+		for offset in range(-3, 1):
+			var c = pos.x + offset
+			var r = pos.y + offset
+			
+			if c >= 0 and c + 3 < connect4.cols and r >= 0 and r + 3 < connect4.rows:
+				var window = []
+				for i in range(4):
+					window.append(board[c + i][r + i])
+				if window.count(player_state) == 3 and window.count(connect4.PlayerState.EMPTY) == 1:
+					threat_count += 1
+		
+		# Диагональные угрозы (↗)
+		for offset in range(-3, 1):
+			var c = pos.x + offset
+			var r = pos.y - offset
+			
+			if c >= 0 and c + 3 < connect4.cols and r - 3 >= 0 and r < connect4.rows:
+				var window = []
+				for i in range(4):
+					window.append(board[c + i][r - i])
+				if window.count(player_state) == 3 and window.count(connect4.PlayerState.EMPTY) == 1:
+					threat_count += 1
+		
+		return threat_count
 
 func _ready() -> void:
 	connect4.turn_changed.connect(_on_turn_changed)
