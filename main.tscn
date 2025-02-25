@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=42 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
@@ -156,6 +156,14 @@ font = ExtResource("12_jkivn")
 font_size = 32
 shadow_size = 3
 shadow_color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="LabelSettings" id="LabelSettings_40g4m"]
+font = ExtResource("12_jkivn")
+font_size = 22
+
+[sub_resource type="LabelSettings" id="LabelSettings_p44iv"]
+font = ExtResource("12_jkivn")
+font_size = 22
 
 [sub_resource type="GDScript" id="GDScript_b86cp"]
 script/source = "extends Control
@@ -514,27 +522,43 @@ layout_mode = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="start_menu/CenterContainer/Container"]
 layout_mode = 0
-offset_left = -93.0
+offset_left = -150.0
 offset_top = 150.0
-offset_right = 92.0
-offset_bottom = 181.0
+offset_right = 150.0
+offset_bottom = 216.0
 pivot_offset = Vector2(0, -0.154999)
 
-[node name="Control" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
+[node name="difficult" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
 layout_mode = 2
 dragger_visibility = 2
 
-[node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/Control"]
+[node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/difficult"]
 layout_mode = 2
 text = "AI Difficult     "
+label_settings = SubResource("LabelSettings_40g4m")
 
-[node name="depth_best_move" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/Control"]
+[node name="depth_best_move" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/difficult"]
 layout_mode = 2
 min_value = 1.0
 max_value = 10.0
 value = 4.0
+prefix = "Level"
 
-[node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]
+[node name="time" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
+layout_mode = 2
+dragger_visibility = 2
+
+[node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/time"]
+layout_mode = 2
+text = "Player Timer     "
+label_settings = SubResource("LabelSettings_p44iv")
+
+[node name="player_timer" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/time"]
+layout_mode = 2
+min_value = 1.0
+max_value = 600.0
+value = 60.0
+suffix = "s"
 
 [node name="win_menu" type="Control" parent="."]
 visible = false
@@ -656,3 +680,5 @@ theme_override_fonts/font = ExtResource("12_jkivn")
 theme_override_font_sizes/font_size = 22
 text = "Restart"
 script = SubResource("GDScript_x3p5e")
+
+[node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]

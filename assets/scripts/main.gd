@@ -44,7 +44,7 @@ func _process_input_actions():
 		get_tree().quit()
 		
 	if Input.is_action_just_pressed(_restart_game_action):
-		if not connect4.is_game_started():
+		if not connect4.is_game_started:
 			return
 			
 		if not connect4.is_game_ended():

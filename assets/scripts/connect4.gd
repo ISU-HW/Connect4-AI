@@ -26,6 +26,7 @@ var last_move: Vector2i
 var wins: int = 0
 var losses: int = 0
 var draws: int = 0
+var is_game_started: bool = false
 
 #region Game Initializing
 func _ready():
@@ -59,11 +60,6 @@ func _create_board():
 #endregion
 
 #region Public Methods
-func is_game_started():
-	if not is_board_empty() and not is_board_full() and player_winner == PlayerState.EMPTY:
-		return true
-	return false
-	
 func is_game_ended():
 	if player_winner != PlayerState.EMPTY or is_board_full():
 		return true
@@ -99,9 +95,6 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 	return []  # Если ни в одном направлении не найдено 4-х подряд
 
 func drop_chip(user: String, col: int):
-	if is_board_empty():
-		start.emit()
-		
 	if not drop_chip_timer.time_left == 0 or current_player != PlayerState.EMPTY and users[user] != current_player or not _is_valid_move(col):
 		not_valid_move.emit()
 		return false

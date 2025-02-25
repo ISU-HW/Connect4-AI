@@ -332,7 +332,7 @@ class AiPlayer:
 		return threat_count
 
 func _ready() -> void:
-	var depth_best_move_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/Control/depth_best_move
+	var depth_best_move_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/difficult/depth_best_move
 	connect4.turn_changed.connect(_on_turn_changed)
 	connect4.start.connect(_on_start.bind(depth_best_move_ui))
 	ai_player = AiPlayer.new()
