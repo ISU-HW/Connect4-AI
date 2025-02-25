@@ -9,6 +9,8 @@ signal win
 signal draw
 
 var drop_chip_timer: Timer = Timer.new()
+var player1_timer: Timer = Timer.new()
+var player2_timer: Timer = Timer.new()
 enum PlayerState { EMPTY = 0, PLAYER1 = 1, PLAYER2 = 2 }
 
 const rows: int = 6
@@ -16,6 +18,7 @@ const cols: int = 7
 var spawnconfig_player1 = load("res://assets/tres/spawnconfig_PLAYER1.tres")
 var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
 var drop_chip_cooldown = 0.3
+var turn_time_limit = 30.0  # Время в секундах для каждого хода
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var game_board: Array = []
@@ -36,7 +39,7 @@ func _ready():
 func _initialize_game():
 	_setup_game_state()
 	_create_board()
-	_setup_timer()
+	_setup_timers()
 
 func _setup_game_state():
 	current_player = PlayerState.PLAYER1
@@ -44,12 +47,20 @@ func _setup_game_state():
 	win_chips = []
 	last_move = Vector2i()
 
-func _setup_timer():
+func _setup_timers():
 	drop_chip_timer.autostart = true
 	drop_chip_timer.one_shot = true
 	drop_chip_timer.wait_time = drop_chip_cooldown
-	drop_chip_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
 	add_child(drop_chip_timer)
+
+	player1_timer.wait_time = turn_time_limit
+	player2_timer.wait_time = turn_time_limit
+	player1_timer.one_shot = true
+	player2_timer.one_shot = true
+	player1_timer.timeout.connect(_on_player1_timeout)
+	player2_timer.timeout.connect(_on_player2_timeout)
+	add_child(player1_timer)
+	add_child(player2_timer)
 
 func _create_board():
 	game_board = []
@@ -159,10 +170,24 @@ func _switch_turn():
 		PlayerState.EMPTY:
 			current_player = PlayerState.EMPTY
 		PlayerState.PLAYER1:
+			player1_timer.stop()  # Остановить таймер игрока 1
+			player2_timer.start()  # Запустить таймер игрока 2
 			current_player = PlayerState.PLAYER2
 		PlayerState.PLAYER2:
-			current_player = PlayerState.PLAYER1
+			player2_timer.stop()  # Остановить таймер игрока 2
+			player1_timer.start()  # Запустить таймер игрока 1
+			current_player = PlayerState.PLAYER1	
 	turn_changed.emit()
+
+func _on_player1_timeout():
+	player_winner = PlayerState.PLAYER2  # Игрок 2 выигрывает
+	win.emit()
+	print("Player 1 has run out of time. Player 2 wins!")
+
+func _on_player2_timeout():
+	player_winner = PlayerState.PLAYER1  # Игрок 1 выигрывает
+	win.emit()
+	print("Player 2 has run out of time. Player 1 wins!")
 
 # Вспомогательная функция для поиска совпадений в заданном направлении с учётом токена игрока
 func _win_matches_in_direction(board: Array, col: int, row: int, direction: Vector2i, player: PlayerState) -> Array:
