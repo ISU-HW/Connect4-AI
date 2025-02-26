@@ -6,7 +6,7 @@ const CENTER_BONUS: float = 5.0
 
 var ai_player: AiPlayer
 var visualizer_enable: bool = false
-var depth_best_move: int
+var best_move_depth: int
 var thread: Thread
 
 class AiPlayer:
@@ -292,15 +292,15 @@ func _ready() -> void:
 		add_child(visualizer)
 
 func _on_start():
-	var depth_best_move_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/difficult/depth_best_move
-	if depth_best_move_ui != null:
-		depth_best_move_ui.apply()
-		depth_best_move = int(depth_best_move_ui.get_line_edit().text)
+	var best_move_depth_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/difficult/best_move_depth
+	if best_move_depth_ui != null:
+		best_move_depth_ui.apply()
+		best_move_depth = int(best_move_depth_ui.get_line_edit().text)
 
 func _on_turn_changed():
 	if connect4.current_player == connect4.users["AI"]:
 		if connect4.drop_chip_timer.time_left > 0:
 			await connect4.drop_chip_timer.timeout
 		if connect4.player_winner == connect4.PlayerState.EMPTY:
-			var best_move = await ai_player.get_best_move(depth_best_move)
+			var best_move = await ai_player.get_best_move(best_move_depth)
 			connect4.drop_chip("AI", best_move)

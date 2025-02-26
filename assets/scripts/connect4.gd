@@ -28,14 +28,10 @@ var current_player: int = PlayerState.PLAYER1
 var player_winner: int = PlayerState.EMPTY
 var win_chips: Array
 var last_move: Vector2i
-var wins: int = 0
-var losses: int = 0
-var draws: int = 0
 var is_game_started: bool = false
 
 #region Game Initializing
 func _ready():
-	_load_data()
 	_initialize_game()
 
 func _initialize_game():
@@ -141,24 +137,18 @@ func drop_chip(user: String, col: int):
 			win_chips = win_matches(game_board, row, col, current_player)
 			if win_chips:
 				player_winner = current_player
-				match player_winner:
-					users.PLAYER:
-						wins += 1
-					users.AI:
-						losses += 1
-				_save_data()
 				player1_timer.stop()
 				player2_timer.stop()
 				print("Player ", current_player, " wins!")
+				_save_game_stats()
 				win.emit()
 			elif is_board_full():
 				current_player = PlayerState.EMPTY
 				player_winner = PlayerState.EMPTY
-				draws += 1
-				_save_data()
 				player1_timer.stop()
 				player2_timer.stop()
 				print("A draw")
+				_save_game_stats()
 				draw.emit()
 
 			_switch_turn()
@@ -221,7 +211,6 @@ func _on_player2_timeout():
 	win.emit()
 	print("Player 2 has run out of time. Player 1 wins!")
 
-# Вспомогательная функция для поиска совпадений в заданном направлении с учётом токена игрока
 func _win_matches_in_direction(board: Array, col: int, row: int, direction: Vector2i, player: PlayerState) -> Array:
 	var forward = _get_matches_in_direction(board, col, row, direction.y, direction.x, player)
 	var backward = _get_matches_in_direction(board, col, row, -direction.y, -direction.x, player)
@@ -229,7 +218,6 @@ func _win_matches_in_direction(board: Array, col: int, row: int, direction: Vect
 	var all_matches = backward + [Vector2i(row, col)] + forward
 	return all_matches
 
-# Функция, собирающая подряд идущие ячейки с указанным токеном вдоль заданного направления
 func _get_matches_in_direction(board: Array, start_col: int, start_row: int, step_col: int, step_row: int, player: PlayerState) -> Array:
 	var current_row = start_row + step_row
 	var current_col = start_col + step_col
@@ -242,22 +230,78 @@ func _get_matches_in_direction(board: Array, start_col: int, start_row: int, ste
 		current_col += step_col
 	return matches
 
-func _save_data():
-	var config = ConfigFile.new()
-	config.set_value("Connect4", "wins", wins)
-	config.set_value("Connect4", "losses", losses)
-	config.set_value("Connect4", "draws", draws)
-	var err = config.save("user://save.cfg")
-	if err != OK:
-		print("Failed to save data: ", err)
+func _get_opponent_id(ai_player) -> String:
+	var depth = ai_player.best_move_depth
+	var version = Engine.get_version_info().string
+	return "AiPlayer" + str(depth) + "_v" + version
 
-func _load_data():
+func _save_game_stats():
+	if player_winner == PlayerState.EMPTY and not is_game_ended():
+		return
+		
 	var config = ConfigFile.new()
-	var err = config.load("user://save.cfg")
-	if err == OK:
-		wins = config.get_value("Connect4", "wins", 0)
-		losses = config.get_value("Connect4", "losses", 1)
-		draws = config.get_value("Connect4", "draws", 2)
+	var err = config.load("user://connect4_stats.cfg")
+	if err != OK and err != ERR_FILE_NOT_FOUND:
+		print("Failed to load existing config: ", err)
+		return
+
+	var opponent_id =  _get_opponent_id(ai_player) if ai_player != null else "Unknown"
+	
+	if not config.has_section(opponent_id):
+		config.set_value(opponent_id, "wins", 0)
+		config.set_value(opponent_id, "losses", 0)
+		config.set_value(opponent_id, "draws", 0)
+	
+	if player_winner == users["AI"]:
+		var wins = config.get_value(opponent_id, "wins", 0)
+		config.set_value(opponent_id, "wins", wins + 1)
+	elif player_winner == users["PLAYER"]:
+		var losses = config.get_value(opponent_id, "losses", 0)
+		config.set_value(opponent_id, "losses", losses + 1)
 	else:
-		print("Failed to load data: ", err)
+		var draws = config.get_value(opponent_id, "draws", 0)
+		config.set_value(opponent_id, "draws", draws + 1)
+	
+	# Save updated config
+	err = config.save("user://connect4_stats.cfg")
+	if err != OK:
+		print("Failed to save game stats: ", err)
+
+func _load_game_stats(ai_player) -> Dictionary:
+	var config = ConfigFile.new()
+	var stats = {"wins": 0, "losses": 0, "draws": 0}
+	
+	var err = config.load("user://connect4_stats.cfg")
+	if err != OK:
+		print("No existing stats found or error loading: ", err)
+		return stats
+	
+	var opponent_id = _get_opponent_id(ai_player)
+	
+	if config.has_section(opponent_id):
+		stats["wins"] = config.get_value(opponent_id, "wins", 0)
+		stats["losses"] = config.get_value(opponent_id, "losses", 0)
+		stats["draws"] = config.get_value(opponent_id, "draws", 0)
+	else:
+		print("No stats found for opponent: ", opponent_id)
+	
+	return stats
+
+func get_all_opponent_stats() -> Dictionary:
+	var config = ConfigFile.new()
+	var all_stats = {}
+	
+	var err = config.load("user://connect4_stats.cfg")
+	if err != OK:
+		print("No existing stats found or error loading: ", err)
+		return all_stats
+	
+	for section in config.get_sections():
+		all_stats[section] = {
+			"wins": config.get_value(section, "wins", 0),
+			"losses": config.get_value(section, "losses", 0),
+			"draws": config.get_value(section, "draws", 0)
+		}
+	
+	return all_stats
 #endregion

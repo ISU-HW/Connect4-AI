@@ -47,9 +47,7 @@ func _process_input_actions():
 		if not connect4.is_game_started:
 			return
 			
-		if not connect4.is_game_ended():
-			connect4.losses += 1
-			connect4._save_data()
+		connect4._save_game_stats()
 		connect4.restart_game()
 		
 	for i in range(7):

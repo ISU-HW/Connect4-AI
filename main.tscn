@@ -198,17 +198,29 @@ font_size = 20
 [sub_resource type="GDScript" id="GDScript_yd5fm"]
 script/source = "extends Label
 
+var template = self.text
+
 func _ready() -> void:
 	connect4.win.connect(_on_end)
 	connect4.draw.connect(_on_end)
 
 func _on_end():
-	self.text = self.text.format({
-		\"winrate\": snappedf(100.0*connect4.wins/(connect4.wins + connect4.losses + connect4.draws), 0.1),
-		\"wins\": connect4.wins,
-		\"losses\": connect4.losses,
-		\"draws\": connect4.draws,
-		\"games\": connect4.wins + connect4.losses + connect4.draws,
+	var stats = connect4._load_game_stats(ai_player)
+	var wins = stats[\"losses\"]
+	var losses = stats[\"wins\"]
+	var draws = stats[\"draws\"]
+	var total_games = wins + losses + draws
+	
+	var winrate = 0.0
+	if total_games > 0:
+		winrate = snappedf(100.0 * wins / total_games, 0.1)
+	
+	self.text = template.format({
+		\"winrate\": winrate,
+		\"wins\": wins,
+		\"losses\": losses,
+		\"draws\": draws,
+		\"games\": total_games,
 	})
 "
 
@@ -220,17 +232,30 @@ font_size = 20
 [sub_resource type="GDScript" id="GDScript_gy4i6"]
 script/source = "extends Label
 
+var template = self.text
+
 func _ready() -> void:
 	connect4.win.connect(_on_end)
 	connect4.draw.connect(_on_end)
 
 func _on_end():
-	self.text = self.text.format({
-		\"winrate\": snappedf(100.0*connect4.losses/(connect4.wins + connect4.losses + connect4.draws), 0.1),
-		\"wins\": connect4.losses,
-		\"losses\": connect4.wins,
-		\"draws\": connect4.draws,
-		\"games\": connect4.wins + connect4.losses + connect4.draws,
+	var stats = connect4._load_game_stats(ai_player)
+	var wins = stats[\"wins\"]
+	var losses = stats[\"losses\"]
+	var draws = stats[\"draws\"]
+	var total_games = wins + losses + draws
+	
+	var winrate = 0.0
+	if total_games > 0:
+		winrate = snappedf(100.0 * wins / total_games, 0.1)
+	
+	self.text = template.format({
+		\"ai_player_level\": ai_player.best_move_depth,
+		\"winrate\": winrate,
+		\"wins\": wins,
+		\"losses\": losses,
+		\"draws\": draws,
+		\"games\": total_games,
 	})
 "
 
@@ -536,7 +561,7 @@ layout_mode = 2
 text = "AI Difficult     "
 label_settings = SubResource("LabelSettings_40g4m")
 
-[node name="depth_best_move" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/difficult"]
+[node name="best_move_depth" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/difficult"]
 layout_mode = 2
 min_value = 1.0
 max_value = 10.0
@@ -617,7 +642,7 @@ script = SubResource("GDScript_yd5fm")
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "AI stats
+text = "AI LEVEL {ai_player_level} stats
 {winrate}% — Winrate
 {wins} — Wins
 {losses} — Losses
