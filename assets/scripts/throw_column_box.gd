@@ -8,13 +8,11 @@ var material = get_surface_override_material(0)
 var highlight_tween: Tween
 var shake_tween: Tween
 var original_position: Vector3
-var original_color: Color
+var original_color: Color = Color(1, 1, 1, 0.2)
 
 func _ready() -> void:
 	connect4.not_valid_move.connect(_not_valid)
 	original_position = position
-	if material:
-		original_color = material.albedo_color
 
 func _not_valid():
 	_shake()

@@ -106,9 +106,12 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 	return []  # Если ни в одном направлении не найдено 4-х подряд
 
 func drop_chip(user: String, col: int):
+	if not connect4.is_game_started:
+		return
+	
 	if not drop_chip_timer.time_left == 0 or current_player != PlayerState.EMPTY and users[user] != current_player or not _is_valid_move(col):
 		not_valid_move.emit()
-		return false
+		return 
 
 	for row in range(rows - 1, -1, -1):
 		if game_board[col][row] == PlayerState.EMPTY:
