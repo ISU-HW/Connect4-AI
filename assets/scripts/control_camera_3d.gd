@@ -10,7 +10,7 @@ extends Camera3D
 
 @export_group("Camera Control")
 ## Mouse button for orbital movement
-@export var enable: bool = true
+@export var enable: bool = false
 @export_enum("LEFT_BUTTON", "MIDDLE_BUTTON", "RIGHT_BUTTON") var action_mouse_button: String = "MIDDLE_BUTTON"
 @export_range(0.5, 10, 0.1) var rotation_speed: float = 1.0
 @export_range(0, 10, 0.1) var translation_speed: float = 1.0
@@ -44,7 +44,7 @@ extends Camera3D
 @export var home_return_duration: float = 0.3
 @export var home_ease_curve: Curve
 
-var _state: int = State.IDLE
+var _state: int = State.LOCKED
 var _cam_from_pivot_dist: float
 var _pivot_transform: Transform3D
 var _pole_mesh := ImmediateMesh.new()
@@ -72,6 +72,7 @@ const _WHEEL_SENSITIVITY = 0.5
 const _ANGLE_GAP = PI/128
 
 func _ready() -> void:
+	connect4.start.connect(_on_start)
 	connect4.draw.connect(_on_end)
 	connect4.win.connect(_on_end)
 	
@@ -97,6 +98,7 @@ func _place_pivot():
 			look_at_from_position(new_cam_pos, pivot_pos)
 
 func _process(delta: float) -> void:
+	
 	if Engine.is_editor_hint():
 		_place_pivot()
 		var global_tr_inv = global_transform.inverse()
@@ -115,8 +117,8 @@ func _process(delta: float) -> void:
 		global_position = new_cam_pos
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not current or not enable: return
-
+	if not current or not enable or _state == State.LOCKED: return
+	
 	if event is InputEventKey and event.pressed:
 		var is_home_key = (home_action_button == "SPACE" and event.keycode == KEY_SPACE) or \
 						  (home_action_button == "H" and event.keycode == KEY_H)
@@ -124,9 +126,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			home_return()
 			get_viewport().set_input_as_handled()
 			return
-
-	if _state == State.LOCKED:
-		return
 
 	if event is InputEventMouseButton:
 		var should_rotate = false
@@ -176,7 +175,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_target_zoom = clamp(_target_zoom + _WHEEL_SENSITIVITY * zoom_speed, zoom_in, zoom_out)
 
 func _handle_camera_rotation(event: InputEventMouseMotion) -> void:
-	if _state == State.LOCKED: return
+	if not current or not enable or _state == State.LOCKED: return
 
 	var relative_motion = event.relative
 
@@ -273,6 +272,11 @@ func _apply_home_animation(progress: float, start_tr: Transform3D, start_rot: Ve
 	_cam_from_pivot_dist = global_position.distance_to(pivot_pos)
 	_target_zoom = _cam_from_pivot_dist
 
+func _on_start():
+	home_return()
+	self.enable = true
+
 func _on_end():
 	self.enable = false
 	home_return()
+	_state = State.LOCKED

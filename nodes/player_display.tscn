@@ -134,9 +134,8 @@ func _ready() -> void:
 	connect4.start.connect(_on_start)
 	
 func _on_start():
-	var difficult = ai_player.best_move_depth
 	self.text = template.format({
-		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI \" + \" Level \" + str(difficult),
+		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI \" + \" Level \" + str(ai_player.difficult),
 	})
 "
 

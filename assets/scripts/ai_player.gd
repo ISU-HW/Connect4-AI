@@ -3,10 +3,12 @@ extends Node2D
 const WIN_SCORE: float = 10000
 const LOSE_SCORE: float = -10000
 const CENTER_BONUS: float = 5.0
+const CENTER_COL = int(connect4.cols / 2.0)
 
 var ai_player: AiPlayer
 var visualizer_enable: bool = false
-var best_move_depth: int
+var difficult: int
+var minimax_depth: int
 var thread: Thread
 
 class AiPlayer:
@@ -32,10 +34,8 @@ class AiPlayer:
 		self.current_board = connect4.game_board.duplicate(true)
 		var game_board_valid_moves = connect4.get_all_valid_moves()
 		
-		# Центральные колонки имеют приоритет
-		var center_col = int(connect4.cols / 2)
 		game_board_valid_moves.sort_custom(func(a, b): 
-			return abs(a - center_col) < abs(b - center_col)
+			return abs(a - CENTER_COL) < abs(b - CENTER_COL)
 		)
 		
 		calculation_complete = false
@@ -60,23 +60,44 @@ class AiPlayer:
 		var thread_best_score = -INF
 		var thread_board = current_board.duplicate(true)
 		
+		var winning_move = -1
+		var blocking_move = -1
+		
 		for move_idx in range(valid_moves.size()):
 			var col = valid_moves[move_idx]
+			
 			var board_copy = thread_board.duplicate(true)
 			var new_last_move = _simulate_move(board_copy, col, "AI")
-			thread_last_moves["AI"] = new_last_move
-			
 			if connect4.win_matches(board_copy, new_last_move.x, new_last_move.y, connect4.users["AI"]).size() > 0:
-				thread_best_moves = [col]
+				winning_move = col
 				break
-
-			var score = _minimax(board_copy, depth - 1, false, -INF, INF, thread_last_moves)
 			
-			if score > thread_best_score:
-				thread_best_score = score
-				thread_best_moves = [col]
-			elif score == thread_best_score:
-				thread_best_moves.append(col)
+			board_copy = thread_board.duplicate(true)
+			var row = _find_row_for_move(board_copy, col)
+			if row >= 0:
+				board_copy[col][row] = connect4.users["PLAYER"]
+				if connect4.win_matches(board_copy, col, row, connect4.users["PLAYER"]).size() > 0:
+					blocking_move = col
+		
+		if winning_move >= 0:
+			thread_best_moves = [winning_move]
+		elif blocking_move >= 0:
+			thread_best_moves = [blocking_move]
+		else:
+			for move_idx in range(valid_moves.size()):
+				var col = valid_moves[move_idx]
+				var board_copy = thread_board.duplicate(true)
+				var new_last_move = _simulate_move(board_copy, col, "AI")
+				thread_last_moves["AI"] = new_last_move
+				
+				var threat_bonus = _evaluate_threat(board_copy, col)
+				var score = _minimax(board_copy, depth - 1, false, -INF, INF, thread_last_moves) + threat_bonus
+				
+				if score > thread_best_score:
+					thread_best_score = score
+					thread_best_moves = [col]
+				elif score == thread_best_score:
+					thread_best_moves.append(col)
 		
 		_complete_calculation.call_deferred(thread_best_moves, thread_best_score)
 		_cleanup_thread.call_deferred()
@@ -92,16 +113,47 @@ class AiPlayer:
 		
 		move_calculated.emit()
 	
+	func _simulate_move(board: Array, col: int, user: String) -> Vector2i:
+		var player = connect4.users[user]
+		for row in range(connect4.rows - 1, -1, -1):
+			if board[col][row] == connect4.PlayerState.EMPTY:
+				board[col][row] = player
+				return Vector2i(col, row)
+		return Vector2i(-1, -1)
+
+	func _get_valid_moves(board: Array) -> Array:
+		var valid_moves = []
+		for col in range(connect4.cols):
+			if board[col][0] == connect4.PlayerState.EMPTY:
+				valid_moves.append(col)
+		return valid_moves
+
+	func _is_game_end(board: Array, thread_last_moves: Dictionary) -> bool:
+		if thread_last_moves["AI"].x >= 0 and connect4.win_matches(board, thread_last_moves["AI"].x, thread_last_moves["AI"].y, connect4.users["AI"]).size() > 0:
+			return true
+		if thread_last_moves["PLAYER"].x >= 0 and connect4.win_matches(board, thread_last_moves["PLAYER"].x, thread_last_moves["PLAYER"].y, connect4.users["PLAYER"]).size() > 0:
+			return true
+		return _get_valid_moves(board).is_empty()
+		
+	func _find_row_for_move(board: Array, col: int) -> int:
+		for row in range(connect4.rows - 1, -1, -1):
+			if board[col][row] == connect4.PlayerState.EMPTY:
+				return row
+		return -1
+		
 	func _minimax(board: Array, depth: int, is_maximizing: bool, alpha: float, beta: float, thread_last_moves: Dictionary) -> float:
 		if _is_game_end(board, thread_last_moves) or depth == 0:
 			return _evaluate_board(board, thread_last_moves, depth)
 
 		var valid_moves = _get_valid_moves(board)
 		
-		# Сортируем ходы, начиная с центра
-		var center_col = int(connect4.cols / 2)
-		valid_moves.sort_custom(func(a, b): 
-			return abs(a - center_col) < abs(b - center_col)
+		valid_moves.sort_custom(func(a, b):
+			var threat_a = _evaluate_threat(board, a)
+			var threat_b = _evaluate_threat(board, b)
+			
+			match threat_a - threat_b:
+				_: return threat_a > threat_b
+				0: return abs(a - CENTER_COL) < abs(b - CENTER_COL)
 		)
 
 		if is_maximizing:
@@ -153,27 +205,120 @@ class AiPlayer:
 					
 			return min_eval
 
-	func _simulate_move(board: Array, col: int, user: String) -> Vector2i:
-		var player = connect4.users[user]
-		for row in range(connect4.rows - 1, -1, -1):
-			if board[col][row] == connect4.PlayerState.EMPTY:
-				board[col][row] = player
-				return Vector2i(col, row)
-		return Vector2i(-1, -1)
 
-	func _get_valid_moves(board: Array) -> Array:
-		var valid_moves = []
+	func _evaluate_threat(board: Array, col: int) -> float:
+		var threat_score: float = 0.0
+		var board_copy = board.duplicate(true)
+		
+		var ai_row = _find_row_for_move(board_copy, col)
+		if ai_row >= 0:
+			var ai_move = Vector2i(col, ai_row)
+			board_copy[col][ai_row] = connect4.users["AI"]
+			
+			threat_score += _count_potential_wins(board_copy, ai_move, connect4.users["AI"]) * 50
+			
+			var player_threats = 0
+			for player_col in range(connect4.cols):
+				if board_copy[player_col][0] == connect4.PlayerState.EMPTY:
+					var player_row = _find_row_for_move(board_copy, player_col)
+					if player_row >= 0:
+						var player_board = board_copy.duplicate(true)
+						player_board[player_col][player_row] = connect4.users["PLAYER"]
+						
+						if connect4.win_matches(player_board, player_col, player_row, connect4.users["PLAYER"]).size() > 0:
+							player_threats += 1
+			
+			threat_score -= player_threats * 75
+			
+			if _check_double_win_trap(board_copy, connect4.users["PLAYER"]):
+				threat_score -= 200
+		
+		threat_score += _check_multiple_threats(board_copy, connect4.users["AI"]) * 60
+		
+		var center_weight = 3.0 * (1.0 - abs(col - CENTER_COL) / float(CENTER_COL))
+		threat_score += center_weight
+		
+		return threat_score
+		
+	func _count_potential_wins(board: Array, move: Vector2i, player_state) -> int:
+		var potential_wins = 0
+		var directions = [
+			Vector2i(0, 1),   # вертикаль
+			Vector2i(1, 0),   # горизонталь
+			Vector2i(1, 1),   # диагональ ↘
+			Vector2i(-1, 1)   # диагональ ↙
+		]
+		
+		for dir in directions:
+			for offset in range(-3, 1):
+				var sequence = []
+				var valid_sequence = true
+				
+				for i in range(4):
+					var check_pos = Vector2i(move.x + (offset + i) * dir.x, move.y + (offset + i) * dir.y)
+					
+					# Проверка на выход за границы
+					if check_pos.x < 0 or check_pos.x >= connect4.cols or check_pos.y < 0 or check_pos.y >= connect4.rows:
+						valid_sequence = false
+						break
+					
+					sequence.append(board[check_pos.x][check_pos.y])
+				
+				if valid_sequence:
+					var player_count = sequence.count(player_state)
+					var empty_count = sequence.count(connect4.PlayerState.EMPTY)
+					
+					# Проверяем, можно ли сделать ход в пустые клетки
+					if player_count == 3 and empty_count == 1:
+						var empty_index = sequence.find(connect4.PlayerState.EMPTY)
+						var empty_col = move.x + (offset + empty_index) * dir.x
+						
+						# Проверяем, доступна ли клетка для хода
+						var empty_row = move.y + (offset + empty_index) * dir.y
+						if empty_row == connect4.rows - 1 or board[empty_col][empty_row + 1] != connect4.PlayerState.EMPTY:
+							potential_wins += 1
+		
+		return potential_wins
+
+	# Проверка на наличие двойной угрозы выигрыша (когда противник может выиграть двумя способами)
+	func _check_double_win_trap(board: Array, player_state) -> bool:
+		for col in range(connect4.cols):
+			if board[col][0] == connect4.PlayerState.EMPTY:  # Колонка не заполнена
+				var row = _find_row_for_move(board, col)
+				if row >= 0:
+					var board_copy = board.duplicate(true)
+					board_copy[col][row] = player_state
+					
+					# Проверяем, есть ли у противника две возможные выигрышные позиции после этого хода
+					var win_opportunities = 0
+					
+					for next_col in range(connect4.cols):
+						if next_col != col and board_copy[next_col][0] == connect4.PlayerState.EMPTY:
+							var next_row = _find_row_for_move(board_copy, next_col)
+							if next_row >= 0:
+								var next_board = board_copy.duplicate(true)
+								next_board[next_col][next_row] = player_state
+								if connect4.win_matches(next_board, next_col, next_row, player_state).size() > 0:
+									win_opportunities += 1
+									if win_opportunities >= 2:
+										return true
+		
+		return false
+
+	# Проверка на наличие нескольких угроз у игрока
+	func _check_multiple_threats(board: Array, player_state) -> int:
+		var threat_count = 0
+		
 		for col in range(connect4.cols):
 			if board[col][0] == connect4.PlayerState.EMPTY:
-				valid_moves.append(col)
-		return valid_moves
-
-	func _is_game_end(board: Array, thread_last_moves: Dictionary) -> bool:
-		if thread_last_moves["AI"].x >= 0 and connect4.win_matches(board, thread_last_moves["AI"].x, thread_last_moves["AI"].y, connect4.users["AI"]).size() > 0:
-			return true
-		if thread_last_moves["PLAYER"].x >= 0 and connect4.win_matches(board, thread_last_moves["PLAYER"].x, thread_last_moves["PLAYER"].y, connect4.users["PLAYER"]).size() > 0:
-			return true
-		return _get_valid_moves(board).is_empty()
+				var row = _find_row_for_move(board, col)
+				if row >= 0:
+					var board_copy = board.duplicate(true)
+					board_copy[col][row] = player_state
+					if connect4.win_matches(board_copy, col, row, player_state).size() > 0:
+						threat_count += 1
+		
+		return threat_count
 
 	func _evaluate_board(board: Array, thread_last_moves: Dictionary, remaining_depth: int = 0) -> float:
 		# Если AI выиграл, возвращаем высокий положительный балл с учетом глубины
@@ -189,11 +334,10 @@ class AiPlayer:
 			return 0.0
 
 		var score: float = 0.0
-		var center_col = int(connect4.cols / 2)
 		
 		# Бонус за контроль центра
 		for row in range(connect4.rows):
-			if board[center_col][row] == connect4.users["AI"]:
+			if board[CENTER_COL][row] == connect4.users["AI"]:
 				score += CENTER_BONUS
 		
 		# Оценка последовательностей
@@ -275,7 +419,7 @@ class AiPlayer:
 					if player_count == 4:
 						score -= WIN_SCORE
 					elif player_count == 3 and empty_count == 1:
-						score -= 100  # Повышенный приоритет блокирования
+						score -= 1000
 					elif player_count == 2 and empty_count == 2:
 						score -= 10
 				
@@ -292,15 +436,16 @@ func _ready() -> void:
 		add_child(visualizer)
 
 func _on_start():
-	var best_move_depth_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/difficult/best_move_depth
-	if best_move_depth_ui != null:
-		best_move_depth_ui.apply()
-		best_move_depth = int(best_move_depth_ui.get_line_edit().text)
+	var difficult_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/level/difficult
+	if difficult_ui != null:
+		difficult_ui.apply()
+		difficult = int(difficult_ui.get_line_edit().text)
+		minimax_depth = int((difficult*(difficult + 1))/2.0)
 
 func _on_turn_changed():
 	if connect4.current_player == connect4.users["AI"]:
 		if connect4.drop_chip_timer.time_left > 0:
 			await connect4.drop_chip_timer.timeout
 		if connect4.player_winner == connect4.PlayerState.EMPTY:
-			var best_move = await ai_player.get_best_move(best_move_depth)
+			var best_move = await ai_player.get_best_move(minimax_depth)
 			connect4.drop_chip("AI", best_move)

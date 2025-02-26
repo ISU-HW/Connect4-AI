@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=46 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
@@ -162,6 +162,27 @@ font_size = 32
 shadow_size = 3
 shadow_color = Color(0, 0, 0, 0.5)
 
+[sub_resource type="GDScript" id="GDScript_2ye35"]
+script/source = "extends VBoxContainer
+
+
+func _ready() -> void:
+	%difficult.value_changed.connect(_on_difficult_changed)
+
+func _on_difficult_changed(difficult):
+	match int(difficult):
+		1:
+			%player_timer.set_value_no_signal(15)
+		2:
+			%player_timer.set_value_no_signal(60)
+		3:
+			%player_timer.set_value_no_signal(150)
+		4:
+			%player_timer.set_value_no_signal(300)
+		5:
+			%player_timer.set_value_no_signal(600)
+"
+
 [sub_resource type="LabelSettings" id="LabelSettings_40g4m"]
 font = ExtResource("12_jkivn")
 font_size = 22
@@ -256,7 +277,7 @@ func _on_end():
 		winrate = snappedf(100.0 * wins / total_games, 0.1)
 	
 	self.text = template.format({
-		\"ai_player_level\": ai_player.best_move_depth,
+		\"ai_player_level\": ai_player.difficult,
 		\"winrate\": winrate,
 		\"wins\": wins,
 		\"losses\": losses,
@@ -339,6 +360,9 @@ func _ready() -> void:
 func _on_pressed():
 	connect4.restart_game()
 "
+
+[sub_resource type="LabelSettings" id="LabelSettings_nuud5"]
+font = ExtResource("12_jkivn")
 
 [sub_resource type="GDScript" id="GDScript_w2sle"]
 script/source = "extends Label
@@ -447,6 +471,7 @@ current = true
 fov = 50.0
 script = ExtResource("7_iobgj")
 pivot_pos = Vector3(0, 9, 0)
+enable = true
 rotation_speed = 1.5
 zoom_speed = 3.0
 zoom_in = 15.0
@@ -573,21 +598,23 @@ offset_top = 150.0
 offset_right = 150.0
 offset_bottom = 216.0
 pivot_offset = Vector2(0, -0.154999)
+script = SubResource("GDScript_2ye35")
 
-[node name="difficult" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
+[node name="level" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
 layout_mode = 2
 dragger_visibility = 2
 
-[node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/difficult"]
+[node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/level"]
 layout_mode = 2
 text = "AI Difficult     "
 label_settings = SubResource("LabelSettings_40g4m")
 
-[node name="best_move_depth" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/difficult"]
+[node name="difficult" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/level"]
+unique_name_in_owner = true
 layout_mode = 2
 min_value = 1.0
-max_value = 10.0
-value = 6.0
+max_value = 5.0
+value = 2.0
 prefix = "Level"
 
 [node name="time" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
@@ -600,13 +627,15 @@ text = "Players Timer     "
 label_settings = SubResource("LabelSettings_p44iv")
 
 [node name="player_timer" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/time"]
+unique_name_in_owner = true
 layout_mode = 2
 min_value = 15.0
 max_value = 600.0
-value = 150.0
+value = 120.0
 suffix = "s"
 
 [node name="win_menu" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -685,7 +714,7 @@ own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(256, 256)
-render_target_update_mode = 4
+render_target_update_mode = 0
 
 [node name="Piece" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport" instance=ExtResource("8_c4b2j")]
 transform = Transform3D(-0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, -0.198267, -0.739942, 0, 13, -3.297)
@@ -735,10 +764,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -335.0
+offset_left = -266.0
 offset_top = -265.0
-offset_right = -250.0
-offset_bottom = 200.0
+offset_right = -196.0
+offset_bottom = 243.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -749,7 +778,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "P1:   P2: "
+text = "P1 → P2 → "
+label_settings = SubResource("LabelSettings_nuud5")
 autowrap_mode = 2
 script = SubResource("GDScript_w2sle")
 
