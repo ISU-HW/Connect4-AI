@@ -42,8 +42,7 @@ func _initialize_game():
 	_setup_game_state()
 	_create_board()
 	_setup_timers()
-	var player_timer_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/time/player_timer
-	start.connect(_on_start.bind(player_timer_ui))
+	start.connect(_on_start)
 	
 func _setup_game_state():
 	is_game_started = false
@@ -74,7 +73,8 @@ func _create_board():
 #endregion
 
 #region Handlers
-func _on_start(player_timer_ui):
+func _on_start():
+	var player_timer_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/time/player_timer
 	if player_timer_ui != null:
 		player_timer_ui.apply()
 		player_time = int(player_timer_ui.get_line_edit().text)
