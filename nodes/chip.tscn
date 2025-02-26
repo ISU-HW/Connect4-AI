@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=4 uid="uid://dnh214qltuh3l"]
+[gd_scene load_steps=21 format=4 uid="uid://dnh214qltuh3l"]
 
 [ext_resource type="Script" path="res://assets/scripts/chip.gd" id="1_1j851"]
 [ext_resource type="Material" uid="uid://bgeor1mkhbxo7" path="res://assets/tres/pirate_piece.tres" id="2_wrcwk"]
@@ -99,17 +99,19 @@ point_count = 2
 curve = SubResource("Curve_2tj8g")
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_02c0o"]
-emission_shape = 2
-emission_sphere_radius = 0.5
+emission_shape = 6
+emission_ring_axis = Vector3(0, 0, 1)
+emission_ring_height = 0.0
+emission_ring_radius = 0.2
+emission_ring_inner_radius = 0.2
 spread = 0.0
 gravity = Vector3(0, 0, 0)
-linear_accel_min = -2.2
-linear_accel_max = -1.8
-radial_accel_min = 2.0
+radial_accel_min = -2.23517e-06
 radial_accel_max = 2.0
-tangential_accel_min = 2.9
-tangential_accel_max = 3.1
 scale_curve = SubResource("CurveTexture_4cyrk")
+turbulence_enabled = true
+turbulence_noise_strength = 2.0
+turbulence_noise_scale = 1.0
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_t8gwu"]
 material = ExtResource("6_8lcln")
@@ -131,6 +133,29 @@ radial_accel_max = 2.0
 tangential_accel_min = -3.1
 tangential_accel_max = -2.9
 scale_curve = SubResource("CurveTexture_4cyrk")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_leavq"]
+albedo_color = Color(0.25, 0.825, 1, 1)
+rim_enabled = true
+rim = 0.27
+ao_light_affect = 0.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_fmvk0"]
+material = SubResource("StandardMaterial3D_leavq")
+radius = 0.05
+height = 0.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_k6hgf"]
+albedo_color = Color(0.25098, 0.823529, 1, 1)
+emission_enabled = true
+emission = Color(0.25098, 0.823529, 1, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_342f6"]
+material = SubResource("StandardMaterial3D_k6hgf")
+top_radius = 0.2
+bottom_radius = 0.2
+height = 0.1
+rings = 1
 
 [node name="Chip" type="RigidBody3D" node_paths=PackedStringArray("bounce_sound")]
 axis_lock_linear_x = true
@@ -183,3 +208,30 @@ lifetime = 1.2
 visibility_aabb = AABB(-1.06049, -1.05366, -1.68281, 2.14055, 2.93723, 3.34773)
 process_material = SubResource("ParticleProcessMaterial_cby6x")
 draw_pass_1 = SubResource("PlaneMesh_t8gwu")
+
+[node name="highlight_particle" type="GPUParticles3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.3)
+visible = false
+cast_shadow = 0
+amount = 50
+lifetime = 0.7
+visibility_aabb = AABB(-0.716221, -0.671012, -0.194294, 1.40268, 1.43238, 0.374822)
+process_material = SubResource("ParticleProcessMaterial_02c0o")
+draw_pass_1 = SubResource("SphereMesh_fmvk0")
+
+[node name="highlight_particle" type="GPUParticles3D" parent="highlight_particle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.6)
+amount = 50
+lifetime = 0.7
+visibility_aabb = AABB(-3.63129e+37, -2.53124e+35, -1.55219e+38, 3.82986e+37, 2.53124e+35, 1.5736e+38)
+process_material = SubResource("ParticleProcessMaterial_02c0o")
+draw_pass_1 = SubResource("SphereMesh_fmvk0")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="highlight_particle/highlight_particle"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_342f6")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="highlight_particle"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_342f6")

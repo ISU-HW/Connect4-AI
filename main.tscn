@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=44 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
@@ -39,7 +39,12 @@ glow_hdr_scale = 4.0
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6ifjb"]
 bounce = 0.2
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4osb7"]
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+
 [sub_resource type="TextMesh" id="TextMesh_r3hsf"]
+material = SubResource("StandardMaterial3D_4osb7")
 text = "1       2      3      4      5      6      7       "
 font = ExtResource("12_jkivn")
 font_size = 127
@@ -134,6 +139,7 @@ var tween
 
 func _ready() -> void:
 	connect4.start.connect(fade_out)
+	visible = true
 
 func fade_out() -> void:
 	if tween:
@@ -387,6 +393,7 @@ physics_material_override = SubResource("PhysicsMaterial_6ifjb")
 
 [node name="numbers" type="MeshInstance3D" parent="Board"]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 6.2, 13.5, 2)
+cast_shadow = 0
 mesh = SubResource("TextMesh_r3hsf")
 
 [node name="stopline" type="CollisionShape3D" parent="Board"]

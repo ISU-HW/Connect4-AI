@@ -5,6 +5,7 @@ extends RigidBody3D
 
 var previous_velocity_y: float = 0.0
 var _prevent_bounce_sound: bool = false
+var _is_highlight_particle_prevented: bool = false
 
 func setup(config: SpawnConfig):
 #region Root Rotation
@@ -24,6 +25,7 @@ func setup(config: SpawnConfig):
 
 func _ready():
 	connect4.win.connect(_on_connect4_win)
+	connect4.chip_dropped.connect(_on_new_chip_dropped)
 	body_entered.connect(_on_body_entered)
 	add_to_group("pieces")
 	
@@ -35,6 +37,11 @@ func _ready():
 		if snapped(self.linear_velocity.y, 0.001) == 0.0:
 			break
 	_prevent_bounce_sound = true
+	
+	if not _is_highlight_particle_prevented:
+		%highlight_particle.visible = true
+		await get_tree().create_timer(15.0).timeout
+		%highlight_particle.visible = false
 
 func _physics_process(_delta):
 	var current_velocity_y = linear_velocity.y
@@ -45,9 +52,14 @@ func _physics_process(_delta):
 
 func _on_connect4_win():
 	if board_position in connect4.win_chips:
-		await get_tree().create_timer(2).timeout
+		await get_tree().create_timer(1.5).timeout
 		%win_particle.visible = true
-		%Chip.scale.y *= 2
+		%Chip.scale.y *= 1.5
+
+func _on_new_chip_dropped(last_move, _current_player):
+	if board_position != last_move:
+		_is_highlight_particle_prevented = true
+		%highlight_particle.visible = false
 
 func _on_body_entered(body: Node):
 	if body is RigidBody3D:
