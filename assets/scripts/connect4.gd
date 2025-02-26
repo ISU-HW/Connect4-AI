@@ -208,11 +208,18 @@ func _switch_turn():
 	turn_changed.emit()
 
 func _on_player1_timeout():
+	if not is_game_ended():
+		return
+	
+	player2_timer.stop()
 	player_winner = PlayerState.PLAYER2
 	win.emit()
 	print("Player 1 has run out of time. Player 2 wins!")
 
 func _on_player2_timeout():
+	if not is_game_ended():
+		return
+	player1_timer.stop()
 	player_winner = PlayerState.PLAYER1
 	win.emit()
 	print("Player 2 has run out of time. Player 1 wins!")

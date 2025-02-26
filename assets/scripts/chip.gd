@@ -54,10 +54,10 @@ func _on_connect4_win():
 	if board_position in connect4.win_chips:
 		await get_tree().create_timer(1.5).timeout
 		%win_particle.visible = true
-		%Chip.scale.y *= 1.5
+		%Chip.scale.y *= 2
 
 func _on_new_chip_dropped(last_move, _current_player):
-	if board_position != last_move:
+	if board_position != last_move or connect4.is_game_ended():
 		_is_highlight_particle_prevented = true
 		%highlight_particle.visible = false
 
