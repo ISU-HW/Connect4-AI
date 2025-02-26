@@ -72,8 +72,8 @@ const _WHEEL_SENSITIVITY = 0.5
 const _ANGLE_GAP = PI/128
 
 func _ready() -> void:
-	connect4.win.connect(_on_end)
 	connect4.draw.connect(_on_end)
+	connect4.win.connect(_on_end)
 	
 	_place_pivot()
 	var initial_angles = _pivot_transform.basis.get_euler()

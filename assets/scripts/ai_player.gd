@@ -71,7 +71,12 @@ class AiPlayer:
 				thread_best_score = score
 				thread_best_move = valid_moves[move_idx]
 		
-		call_deferred("_complete_calculation", thread_best_move)
+		_complete_calculation.call_deferred(thread_best_move)
+		_cleanup_thread.call_deferred()
+		
+	func _cleanup_thread() -> void:
+		if owner.thread and owner.thread.is_started():
+			owner.thread.wait_to_finish()
 	
 	func _complete_calculation(result_move: int) -> void:
 		best_move = result_move
@@ -353,7 +358,3 @@ func _on_turn_changed():
 		if connect4.player_winner == connect4.PlayerState.EMPTY:
 			var best_move = await ai_player.get_best_move(depth_best_move)
 			connect4.drop_chip("AI", best_move)
-
-func _exit_tree():
-	if thread and thread.is_started():
-		thread.wait_to_finish()

@@ -18,10 +18,12 @@ const cols: int = 7
 var spawnconfig_player1 = load("res://assets/tres/spawnconfig_PLAYER1.tres")
 var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
 var drop_chip_cooldown = 0.3
-var turn_time_limit = 30.0  # Время в секундах для каждого хода
+var player_time = 300.0
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var game_board: Array = []
+var player1_time_remaining: float
+var player2_time_remaining: float
 var current_player: int = PlayerState.PLAYER1
 var player_winner: int = PlayerState.EMPTY
 var win_chips: Array
@@ -40,8 +42,11 @@ func _initialize_game():
 	_setup_game_state()
 	_create_board()
 	_setup_timers()
-
+	var player_timer_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/time/player_timer
+	start.connect(_on_start.bind(player_timer_ui))
+	
 func _setup_game_state():
+	is_game_started = false
 	current_player = PlayerState.PLAYER1
 	player_winner = 0
 	win_chips = []
@@ -52,9 +57,7 @@ func _setup_timers():
 	drop_chip_timer.one_shot = true
 	drop_chip_timer.wait_time = drop_chip_cooldown
 	add_child(drop_chip_timer)
-
-	player1_timer.wait_time = turn_time_limit
-	player2_timer.wait_time = turn_time_limit
+	
 	player1_timer.one_shot = true
 	player2_timer.one_shot = true
 	player1_timer.timeout.connect(_on_player1_timeout)
@@ -70,6 +73,17 @@ func _create_board():
 			game_board[col].append(PlayerState.EMPTY)
 #endregion
 
+#region Handlers
+func _on_start(player_timer_ui):
+	if player_timer_ui != null:
+		player_timer_ui.apply()
+		player_time = int(player_timer_ui.get_line_edit().text)
+	player1_timer.wait_time = player_time
+	player2_timer.wait_time = player_time
+	player1_time_remaining = player_time
+	player2_time_remaining = player_time
+#endregion
+
 #region Public Methods
 func is_game_ended():
 	if player_winner != PlayerState.EMPTY or is_board_full():
@@ -79,6 +93,9 @@ func is_game_ended():
 func restart_game():
 	_setup_game_state()
 	_create_board()
+	player1_timer.stop()
+	player2_timer.stop()
+	drop_chip_timer.stop()
 	get_tree().reload_current_scene()
 
 func set_user_player(player):
@@ -103,7 +120,7 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 		var matches = _win_matches_in_direction(board, col, row, direction, player)
 		if matches.size() >= 4:
 			return matches
-	return []  # Если ни в одном направлении не найдено 4-х подряд
+	return []
 
 func drop_chip(user: String, col: int):
 	if not connect4.is_game_started:
@@ -122,7 +139,6 @@ func drop_chip(user: String, col: int):
 			chip_dropped.emit(last_move, current_player)
 
 			win_chips = win_matches(game_board, row, col, current_player)
-			print(win_chips)
 			if win_chips:
 				player_winner = current_player
 				match player_winner:
@@ -130,17 +146,22 @@ func drop_chip(user: String, col: int):
 						wins += 1
 					users.AI:
 						losses += 1
-				win.emit()
+				_save_data()
+				player1_timer.stop()
+				player2_timer.stop()
 				print("Player ", current_player, " wins!")
+				win.emit()
 			elif is_board_full():
 				current_player = PlayerState.EMPTY
 				player_winner = PlayerState.EMPTY
 				draws += 1
-				draw.emit()
+				_save_data()
+				player1_timer.stop()
+				player2_timer.stop()
 				print("A draw")
+				draw.emit()
 
 			_switch_turn()
-			_save_data()
 			return true
 	return false
 
@@ -173,22 +194,30 @@ func _switch_turn():
 		PlayerState.EMPTY:
 			current_player = PlayerState.EMPTY
 		PlayerState.PLAYER1:
-			player1_timer.stop()  # Остановить таймер игрока 1
-			player2_timer.start()  # Запустить таймер игрока 2
 			current_player = PlayerState.PLAYER2
+			
+			if player1_timer.time_left > 0:
+				player1_time_remaining = player1_timer.time_left
+				
+			player1_timer.stop()
+			player2_timer.start(player2_time_remaining)
 		PlayerState.PLAYER2:
-			player2_timer.stop()  # Остановить таймер игрока 2
-			player1_timer.start()  # Запустить таймер игрока 1
-			current_player = PlayerState.PLAYER1	
+			current_player = PlayerState.PLAYER1
+			
+			if player2_timer.time_left > 0:
+				player2_time_remaining = player2_timer.time_left
+				
+			player2_timer.stop()
+			player1_timer.start(player1_time_remaining)
 	turn_changed.emit()
 
 func _on_player1_timeout():
-	player_winner = PlayerState.PLAYER2  # Игрок 2 выигрывает
+	player_winner = PlayerState.PLAYER2
 	win.emit()
 	print("Player 1 has run out of time. Player 2 wins!")
 
 func _on_player2_timeout():
-	player_winner = PlayerState.PLAYER1  # Игрок 1 выигрывает
+	player_winner = PlayerState.PLAYER1
 	win.emit()
 	print("Player 2 has run out of time. Player 1 wins!")
 

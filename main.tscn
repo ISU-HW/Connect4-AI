@@ -27,7 +27,7 @@ background_mode = 2
 background_color = Color(0.294118, 0.521569, 0.243137, 1)
 background_energy_multiplier = 1.5
 sky = SubResource("Sky_dfjhw")
-sky_rotation = Vector3(0, 3.05433, 0)
+sky_rotation = Vector3(0, 2.70526, 0)
 ssil_intensity = 7.3
 glow_intensity = 8.0
 glow_strength = 1.05
@@ -39,11 +39,10 @@ glow_hdr_scale = 4.0
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6ifjb"]
 bounce = 0.2
 
-[sub_resource type="TextMesh" id="TextMesh_6bjdu"]
-text = "1       2      3      4      5      6       7       "
+[sub_resource type="TextMesh" id="TextMesh_r3hsf"]
+text = "1       2      3      4      5      6      7       "
 font = ExtResource("12_jkivn")
 font_size = 127
-horizontal_alignment = 2
 depth = 0.1
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ob2yj"]
@@ -347,8 +346,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.902, 0, -2.602)
 physics_material_override = SubResource("PhysicsMaterial_6ifjb")
 
 [node name="numbers" type="MeshInstance3D" parent="Board"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 13.5, 2.102)
-mesh = SubResource("TextMesh_6bjdu")
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 6.2, 13.5, 2)
+mesh = SubResource("TextMesh_r3hsf")
 
 [node name="stopline" type="CollisionShape3D" parent="Board"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.923, 2.383, 2.545)
@@ -396,11 +395,11 @@ surface_material_override/2 = SubResource("ORMMaterial3D_nigs7")
 
 [node name="ControlCamera3D" type="Camera3D" parent="."]
 unique_name_in_owner = true
-transform = Transform3D(-1, 1.15541e-08, -8.66559e-08, 0, 0.991228, 0.132164, 8.74228e-08, 0.132164, -0.991228, 0, 10, -15)
+transform = Transform3D(-1, -1.08435e-08, -8.67477e-08, 0, 0.992278, -0.124035, 8.74228e-08, -0.124035, -0.992278, 0, 7, -16)
 current = true
-fov = 55.0
+fov = 50.0
 script = ExtResource("7_iobgj")
-pivot_pos = Vector3(0, 8, 0)
+pivot_pos = Vector3(0, 9, 0)
 rotation_speed = 1.5
 zoom_speed = 3.0
 zoom_in = 15.0
@@ -541,7 +540,7 @@ label_settings = SubResource("LabelSettings_40g4m")
 layout_mode = 2
 min_value = 1.0
 max_value = 10.0
-value = 4.0
+value = 5.0
 prefix = "Level"
 
 [node name="time" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
@@ -550,14 +549,14 @@ dragger_visibility = 2
 
 [node name="Label" type="Label" parent="start_menu/CenterContainer/Container/VBoxContainer/time"]
 layout_mode = 2
-text = "Player Timer     "
+text = "Players Timer     "
 label_settings = SubResource("LabelSettings_p44iv")
 
 [node name="player_timer" type="SpinBox" parent="start_menu/CenterContainer/Container/VBoxContainer/time"]
 layout_mode = 2
-min_value = 1.0
+min_value = 15.0
 max_value = 600.0
-value = 60.0
+value = 300.0
 suffix = "s"
 
 [node name="win_menu" type="Control" parent="."]

@@ -1,19 +1,12 @@
-[gd_scene load_steps=10 format=3 uid="uid://cycny62yykefs"]
+[gd_scene load_steps=12 format=3 uid="uid://cycny62yykefs"]
 
 [ext_resource type="Shader" path="res://assets/shaders/hue.gdshader" id="1_kv7h3"]
 [ext_resource type="Texture2D" uid="uid://chofco3dg6wc5" path="res://assets/png/rounded_patch2.png" id="2_nphiy"]
 [ext_resource type="FontFile" uid="uid://bdili7ia2pkur" path="res://assets/fonts/Homenaje-Regular.ttf" id="4_0k384"]
 [ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="4_godv3"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1pxvv"]
-shader = ExtResource("1_kv7h3")
-shader_parameter/from = Color(0, 0, 0, 1)
-shader_parameter/to = Color(0.382, 0.382, 0.382, 1)
-shader_parameter/alpha = 1.0
-shader_parameter/tolerance = null
-
-[sub_resource type="GDScript" id="GDScript_3p0nf"]
-script/source = "extends NinePatchRect
+[sub_resource type="GDScript" id="GDScript_p3esv"]
+script/source = "extends Control
 
 @export var player: connect4.PlayerState
 @export var is_player_turn: bool = false
@@ -32,39 +25,95 @@ var PLAYER_COLORS = {
 }
 
 @onready var label: Label = %Label
+@onready var patch: NinePatchRect = %NinePatchRect
 
 func _ready() -> void:
 	connect4.start.connect(_on_turn_changed)
 	connect4.turn_changed.connect(_on_turn_changed)
 	label.label_settings = label.label_settings.duplicate(true)
-	_apply_player_color()
+	_patch_apply_player_color()
 
-func _apply_player_color() -> void:
-	var new_material = get_material().duplicate()
+func _patch_apply_player_color() -> void:
+	var new_material = patch.get_material().duplicate()
 	if player in PLAYER_COLORS:
 		new_material.set_shader_parameter(\"to\", PLAYER_COLORS[player])
-		set_material(new_material)
+		patch.set_material(new_material)
 
 func _on_turn_changed() -> void:
-	_update_turn()
-	if connect4.drop_chip_timer.wait_time >= 0.5 and is_player_turn:
-		await connect4.drop_chip_timer.timeout
-	_update()
-
-func _update_turn() -> void:
 	is_player_turn = connect4.current_player == player
-
-func _update() -> void:
+	
+	if connect4.drop_chip_timer.wait_time >= 0 and is_player_turn:
+		await connect4.drop_chip_timer.timeout
+		
 	var tween = create_tween()
 	var alpha = 1.0 if is_player_turn else fade_out_on
-	var size = expand_size if is_player_turn else shrink_size
+	var new_size = expand_size if is_player_turn else shrink_size
 	var position_y = expand_position_y if is_player_turn else shrink_position_y
 
 	tween.tween_property(self, \"modulate:a\", alpha, transition_duration)
-	tween.tween_property(self.material, \"shader_parameter/alpha\", alpha, transition_duration)
-	tween.tween_property(self, \"custom_minimum_size\", size, transition_duration)
+	tween.tween_property(patch.material, \"shader_parameter/alpha\", alpha, transition_duration)
+	tween.tween_property(self, \"custom_minimum_size\", new_size, transition_duration)
 	tween.tween_property(self, \"position:y\", position_y, transition_duration)
 "
+
+[sub_resource type="LabelSettings" id="LabelSettings_vi6yg"]
+line_spacing = 1.0
+font = ExtResource("4_0k384")
+font_size = 24
+outline_color = Color(0, 0, 0, 1)
+shadow_color = Color(0, 0, 0, 1)
+
+[sub_resource type="GDScript" id="GDScript_po8ow"]
+script/source = "extends Label
+
+@onready var player_display = find_parent(\"player*\").player
+
+var template: String = self.text
+
+func _ready():
+	connect4.start.connect(update_timer_text)
+	connect4.turn_changed.connect(update_timer_text)
+
+func update_timer_text() -> void:
+	var time_remaining = get_time_remaining()
+	
+	var minutes = int(time_remaining / 60.0)
+	var seconds = int(time_remaining) % 60
+	var milliseconds = int(snapped(fmod(time_remaining, 1), 0.01) * 100)
+	
+	var minutes_str = \"0\" + str(minutes) if minutes < 10 else str(minutes)
+	var seconds_str = \"0\" + str(seconds) if seconds < 10 else str(seconds)
+	var milliseconds_str = str(milliseconds).pad_zeros(2)
+	
+	self.text = template.format({
+		\"minutes\": minutes_str,
+		\"seconds\": seconds_str,
+		\"milliseconds\": milliseconds_str,
+	})
+
+func get_time_remaining() -> float:
+	if connect4.current_player == connect4.PlayerState.PLAYER1:
+		if player_display == connect4.PlayerState.PLAYER1:
+			return connect4.player_time if connect4.player1_timer.is_stopped() else connect4.player1_timer.time_left
+		else:
+			return connect4.player2_time_remaining
+	else:
+		if player_display == connect4.PlayerState.PLAYER2:
+			return connect4.player_time if connect4.player2_timer.is_stopped() else connect4.player2_timer.time_left
+		else:
+			return connect4.player1_time_remaining
+
+func _process(_delta: float):
+	if connect4.is_game_started and not connect4.is_board_empty():
+		update_timer_text()
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1pxvv"]
+shader = ExtResource("1_kv7h3")
+shader_parameter/from = Color(0, 0, 0, 1)
+shader_parameter/to = Color(0.382, 0.382, 0.382, 1)
+shader_parameter/alpha = 1.0
+shader_parameter/tolerance = null
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_fwube"]
 blend_mode = 2
@@ -77,35 +126,61 @@ font_size = 18
 [sub_resource type="GDScript" id="GDScript_pmxvm"]
 script/source = "extends Label
 
-@onready var player_display = get_parent().get_parent().player
+@onready var player_display = find_parent(\"player*\").player
+
+var template: String = self.text
 
 func _ready() -> void:
 	connect4.start.connect(_on_start)
 	
 func _on_start():
-	self.text = self.text.format({
-		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI\"
+	var difficult = ai_player.depth_best_move
+	self.text = template.format({
+		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI \" + \" Level \" + str(difficult),
 	})
 "
 
-[node name="player" type="NinePatchRect"]
+[node name="player" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = SubResource("GDScript_p3esv")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -53.5
+offset_top = 80.0
+offset_right = 53.5
+offset_bottom = 101.0
+grow_horizontal = 2
+text = "{minutes}:{seconds}"
+label_settings = SubResource("LabelSettings_vi6yg")
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 3
+script = SubResource("GDScript_po8ow")
+
+[node name="NinePatchRect" type="NinePatchRect" parent="."]
+unique_name_in_owner = true
 material = SubResource("ShaderMaterial_1pxvv")
 clip_contents = true
 custom_minimum_size = Vector2(200, 80)
-offset_right = 200.0
-offset_bottom = 70.0
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_right = 100.0
+offset_bottom = 80.0
+grow_horizontal = 2
 size_flags_horizontal = 4
 size_flags_vertical = 0
 texture = ExtResource("2_nphiy")
 region_rect = Rect2(0, 0, 251, 100)
-script = SubResource("GDScript_3p0nf")
-transition_duration = 0.1
-fade_out_on = 0.3
-shrink_size = Vector2(200, 80)
-expand_size = Vector2(200, 80)
-shrink_position_y = -10
 
-[node name="HSplitContainer" type="HSplitContainer" parent="."]
+[node name="HSplitContainer" type="HSplitContainer" parent="NinePatchRect"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -121,7 +196,7 @@ grow_vertical = 0
 mouse_filter = 0
 dragger_visibility = 1
 
-[node name="Picture" type="TextureRect" parent="HSplitContainer"]
+[node name="Picture" type="TextureRect" parent="NinePatchRect/HSplitContainer"]
 texture_filter = 4
 material = SubResource("CanvasItemMaterial_fwube")
 layout_mode = 2
@@ -129,7 +204,7 @@ texture = ExtResource("4_godv3")
 expand_mode = 2
 stretch_mode = 4
 
-[node name="Label" type="Label" parent="HSplitContainer"]
+[node name="Label" type="Label" parent="NinePatchRect/HSplitContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "{user_player}
