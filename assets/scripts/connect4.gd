@@ -22,6 +22,7 @@ var player_time = 300.0
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
 var game_board: Array = []
+var move_history: Array = []
 var player1_time_remaining: float
 var player2_time_remaining: float
 var current_player: int = PlayerState.PLAYER1
@@ -41,6 +42,7 @@ func _initialize_game():
 	start.connect(_on_start)
 	
 func _setup_game_state():
+	move_history = []
 	is_game_started = false
 	current_player = PlayerState.PLAYER1
 	player_winner = 0
@@ -119,7 +121,7 @@ func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array
 	return []
 
 func drop_chip(user: String, col: int):
-	if not connect4.is_game_started:
+	if not is_game_started:
 		return
 	
 	if not drop_chip_timer.time_left == 0 or current_player != PlayerState.EMPTY and users[user] != current_player or not _is_valid_move(col):
@@ -134,6 +136,11 @@ func drop_chip(user: String, col: int):
 			last_move = Vector2i(row, col)
 			chip_dropped.emit(last_move, current_player)
 
+			# Запоминаем ход в шахматной нотации (1-7 для колонок, F-A для строк)
+			var move_str = str(col + 1) + String.chr(102 - row)
+			print("Move to ", move_str)
+			move_history.append(move_str)
+
 			win_chips = win_matches(game_board, row, col, current_player)
 			if win_chips:
 				player_winner = current_player
@@ -143,7 +150,6 @@ func drop_chip(user: String, col: int):
 				_save_game_stats()
 				win.emit()
 			elif is_board_full():
-				current_player = PlayerState.EMPTY
 				player_winner = PlayerState.EMPTY
 				player1_timer.stop()
 				player2_timer.stop()
@@ -236,7 +242,7 @@ func _get_opponent_id(ai_player) -> String:
 	return "AiPlayer" + str(depth) + "_v" + version
 
 func _save_game_stats():
-	if player_winner == PlayerState.EMPTY and not is_game_ended():
+	if player_winner != PlayerState.PLAYER1 or player_winner != PlayerState.PLAYER2 or player_winner == PlayerState.EMPTY and not is_game_ended():
 		return
 		
 	var config = ConfigFile.new()
@@ -245,24 +251,36 @@ func _save_game_stats():
 		print("Failed to load existing config: ", err)
 		return
 
-	var opponent_id =  _get_opponent_id(ai_player) if ai_player != null else "Unknown"
+	var opponent_id = _get_opponent_id(ai_player) if ai_player != null else "Unknown"
 	
 	if not config.has_section(opponent_id):
 		config.set_value(opponent_id, "wins", 0)
 		config.set_value(opponent_id, "losses", 0)
 		config.set_value(opponent_id, "draws", 0)
 	
+	# Определяем исход
+	var outcome = "draw"
 	if player_winner == users["AI"]:
+		outcome = "win"
 		var wins = config.get_value(opponent_id, "wins", 0)
 		config.set_value(opponent_id, "wins", wins + 1)
 	elif player_winner == users["PLAYER"]:
+		outcome = "loss"
 		var losses = config.get_value(opponent_id, "losses", 0)
 		config.set_value(opponent_id, "losses", losses + 1)
 	else:
 		var draws = config.get_value(opponent_id, "draws", 0)
 		config.set_value(opponent_id, "draws", draws + 1)
 	
-	# Save updated config
+	# Сохраняем историю партии
+	var game_id = str(Time.get_unix_time_from_system())  # Уникальный идентификатор игры
+	config.set_value(opponent_id, "games", config.get_value(opponent_id, "games", []) + [game_id])
+	config.set_value(opponent_id, game_id, {
+		"moves": move_history,
+		"result": outcome
+	})
+	
+	# Сохранение в файл
 	err = config.save("user://connect4_stats.cfg")
 	if err != OK:
 		print("Failed to save game stats: ", err)

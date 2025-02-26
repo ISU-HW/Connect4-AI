@@ -1,4 +1,4 @@
-[gd_scene load_steps=42 format=3 uid="uid://bdulov8mmfx7y"]
+[gd_scene load_steps=43 format=3 uid="uid://bdulov8mmfx7y"]
 
 [ext_resource type="Script" path="res://assets/scripts/main.gd" id="1_jf73m"]
 [ext_resource type="Texture2D" uid="uid://bd58l4xs0nkf0" path="res://assets/png/M3_UHD_Render_equirectangular-png_Cozy_anti_cafe_with_1621678042_12913270.png" id="2_onqyp"]
@@ -334,6 +334,21 @@ func _on_pressed():
 	connect4.restart_game()
 "
 
+[sub_resource type="GDScript" id="GDScript_w2sle"]
+script/source = "extends Label
+
+var history = \"\"
+	
+func _ready():
+	connect4.win.connect(_on_end)
+	connect4.draw.connect(_on_end)
+	
+func _on_end():
+	for move in connect4.move_history:
+		history += move + \" → \" if move != connect4.move_history[connect4.move_history.size() - 1] else move
+	self.text = history
+"
+
 [node name="Main" type="Node3D"]
 script = ExtResource("1_jf73m")
 
@@ -565,7 +580,7 @@ label_settings = SubResource("LabelSettings_40g4m")
 layout_mode = 2
 min_value = 1.0
 max_value = 10.0
-value = 5.0
+value = 6.0
 prefix = "Level"
 
 [node name="time" type="HSplitContainer" parent="start_menu/CenterContainer/Container/VBoxContainer"]
@@ -581,7 +596,7 @@ label_settings = SubResource("LabelSettings_p44iv")
 layout_mode = 2
 min_value = 15.0
 max_value = 600.0
-value = 300.0
+value = 150.0
 suffix = "s"
 
 [node name="win_menu" type="Control" parent="."]
@@ -642,7 +657,7 @@ script = SubResource("GDScript_yd5fm")
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_horizontal = 8
-text = "AI LEVEL {ai_player_level} stats
+text = "AI Level {ai_player_level} stats
 {winrate}% — Winrate
 {wins} — Wins
 {losses} — Losses
@@ -704,5 +719,29 @@ theme_override_fonts/font = ExtResource("12_jkivn")
 theme_override_font_sizes/font_size = 22
 text = "Restart"
 script = SubResource("GDScript_x3p5e")
+
+[node name="Panel" type="Panel" parent="win_menu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -200.0
+offset_right = -250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="win_menu/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+autowrap_mode = 2
+script = SubResource("GDScript_w2sle")
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]

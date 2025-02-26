@@ -47,7 +47,6 @@ func _process_input_actions():
 		if not connect4.is_game_started:
 			return
 			
-		connect4._save_game_stats()
 		connect4.restart_game()
 		
 	for i in range(7):
