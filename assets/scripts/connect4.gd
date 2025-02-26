@@ -245,11 +245,12 @@ func _get_matches_in_direction(board: Array, start_col: int, start_row: int, ste
 
 func _get_opponent_id(ai_player) -> String:
 	var depth = ai_player.best_move_depth
-	var version = Engine.get_version_info().string
+	var version = ProjectSettings.get_setting("application/config/version")
 	return "AiPlayer" + str(depth) + "_v" + version
 
 func _save_game_stats():
-	if player_winner != PlayerState.PLAYER1 or player_winner != PlayerState.PLAYER2 or player_winner == PlayerState.EMPTY and not is_game_ended():
+	if (player_winner != PlayerState.PLAYER1 and player_winner != PlayerState.PLAYER2 and 
+		player_winner != PlayerState.EMPTY) or not is_game_ended():
 		return
 		
 	var config = ConfigFile.new()
@@ -280,7 +281,7 @@ func _save_game_stats():
 		config.set_value(opponent_id, "draws", draws + 1)
 	
 	# Сохраняем историю партии
-	var game_id = str(Time.get_unix_time_from_system())  # Уникальный идентификатор игры
+	var game_id = str(Time.get_unix_time_from_system())
 	config.set_value(opponent_id, "games", config.get_value(opponent_id, "games", []) + [game_id])
 	config.set_value(opponent_id, game_id, {
 		"moves": move_history,

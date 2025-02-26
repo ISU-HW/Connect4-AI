@@ -352,7 +352,7 @@ func _ready():
 func _on_end():
 	for move in connect4.move_history:
 		history += move + \" → \" if move != connect4.move_history[connect4.move_history.size() - 1] else move
-	self.text = history
+	self.text += history
 "
 
 [node name="Main" type="Node3D"]
@@ -607,7 +607,6 @@ value = 150.0
 suffix = "s"
 
 [node name="win_menu" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -622,6 +621,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -7.0
+offset_right = -7.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.588235)
@@ -684,7 +685,7 @@ own_world_3d = true
 transparent_bg = true
 handle_input_locally = false
 size = Vector2i(256, 256)
-render_target_update_mode = 0
+render_target_update_mode = 4
 
 [node name="Piece" parent="win_menu/CenterContainer/VBoxContainer/Winner\'s chip/SubViewport" instance=ExtResource("8_c4b2j")]
 transform = Transform3D(-0.766044, 0.166366, 0.620885, 0, 0.965926, -0.258819, -0.642788, -0.198267, -0.739942, 0, 13, -3.297)
@@ -734,8 +735,8 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -500.0
-offset_top = -200.0
+offset_left = -335.0
+offset_top = -265.0
 offset_right = -250.0
 offset_bottom = 200.0
 grow_horizontal = 2
@@ -748,6 +749,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+text = "P1:   P2: "
 autowrap_mode = 2
 script = SubResource("GDScript_w2sle")
 

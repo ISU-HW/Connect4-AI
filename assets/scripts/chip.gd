@@ -52,6 +52,7 @@ func _physics_process(_delta):
 
 func _on_connect4_win():
 	if board_position in connect4.win_chips:
+		_is_highlight_particle_prevented = true
 		await get_tree().create_timer(1.5).timeout
 		%win_particle.visible = true
 		%Chip.scale.y *= 2
