@@ -1,4 +1,3 @@
-@tool
 @icon("res://addons/control_camera3d/control_camera3d.svg")
 extends Camera3D
 

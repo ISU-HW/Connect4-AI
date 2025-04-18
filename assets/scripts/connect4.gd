@@ -19,9 +19,10 @@ var spawnconfig_player1 = load("res://assets/tres/spawnconfig_PLAYER1.tres")
 var spawnconfig_player2 = load("res://assets/tres/spawnconfig_PLAYER2.tres")
 var drop_chip_cooldown = 0.3
 var player_time = 300.0
+var player_timer_turned_on: bool = false
 
 var users: Dictionary = {"PLAYER": PlayerState.PLAYER1, "AI": PlayerState.PLAYER2}
-var game_board: Array = []
+var game_board: Array[Array] = [[]]
 var move_history: Array = []
 var player1_time_remaining: float
 var player2_time_remaining: float
@@ -30,16 +31,19 @@ var player_winner: int = PlayerState.EMPTY
 var win_chips: Array
 var last_move: Vector2i
 var is_game_started: bool = false
+var ai_difficlut: int = 4
+var ai_player: Connect4AI
 
 #region Game Initializing
 func _ready():
+	start.connect(_on_start)
+	turn_changed.connect(_on_turn_changed)
 	_initialize_game()
 
 func _initialize_game():
 	_setup_game_state()
 	_create_board()
 	_setup_timers()
-	start.connect(_on_start)
 	
 func _setup_game_state():
 	move_history = []
@@ -48,6 +52,7 @@ func _setup_game_state():
 	player_winner = 0
 	win_chips = []
 	last_move = Vector2i()
+	ai_player = Connect4AI.new()
 
 func _setup_timers():
 	drop_chip_timer.autostart = true
@@ -72,14 +77,24 @@ func _create_board():
 
 #region Handlers
 func _on_start():
+	var turn_player_timer_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/timer/turn_player_timer
 	var player_timer_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/time/player_timer
+	var difficult_ui = $/root/Main/start_menu/CenterContainer/Container/VBoxContainer/level/difficult
+	if turn_player_timer_ui != null:
+		player_timer_turned_on = turn_player_timer_ui.button_pressed
 	if player_timer_ui != null:
 		player_timer_ui.apply()
 		player_time = int(player_timer_ui.get_line_edit().text)
-	player1_timer.wait_time = player_time
-	player2_timer.wait_time = player_time
-	player1_time_remaining = player_time
-	player2_time_remaining = player_time
+	if difficult_ui != null:
+		difficult_ui.apply()
+		ai_difficlut = int(difficult_ui.get_line_edit().text)
+	if player_timer_turned_on:
+		player1_timer.wait_time = player_time
+		player2_timer.wait_time = player_time
+		player1_time_remaining = player_time
+		player2_time_remaining = player_time
+	
+	is_game_started = true
 #endregion
 
 #region Public Methods
@@ -91,9 +106,11 @@ func is_game_ended():
 func restart_game():
 	_setup_game_state()
 	_create_board()
-	player1_timer.stop()
-	player2_timer.stop()
+	if player_timer_turned_on:
+		player1_timer.stop()
+		player2_timer.stop()
 	drop_chip_timer.stop()
+	
 	get_tree().reload_current_scene()
 
 func set_user_player(player):
@@ -101,12 +118,13 @@ func set_user_player(player):
 		PlayerState.PLAYER1:
 			users["PLAYER"] = PlayerState.PLAYER1
 			users["AI"] = PlayerState.PLAYER2
+			turn_changed.emit()
 		PlayerState.PLAYER2:
 			users["PLAYER"] = PlayerState.PLAYER2
 			users["AI"] = PlayerState.PLAYER1
 			turn_changed.emit()
 			
-func win_matches(board: Array, row: int, col: int, player: PlayerState) -> Array:
+func win_matches(board: Array[Array], row: int, col: int, player: PlayerState) -> Array:
 	const directions = [
 		Vector2i(1, 0),    # вертикаль
 		Vector2i(0, 1),    # горизонталь
@@ -144,15 +162,17 @@ func drop_chip(user: String, col: int):
 			win_chips = win_matches(game_board, row, col, current_player)
 			if win_chips:
 				player_winner = current_player
-				player1_timer.stop()
-				player2_timer.stop()
+				if player_timer_turned_on:
+					player1_timer.stop()
+					player2_timer.stop()
 				print("Player ", current_player, " wins!")
 				_save_game_stats()
 				win.emit()
 			elif is_board_full():
 				player_winner = PlayerState.EMPTY
-				player1_timer.stop()
-				player2_timer.stop()
+				if player_timer_turned_on:
+					player1_timer.stop()
+					player2_timer.stop()
 				print("A draw")
 				_save_game_stats()
 				draw.emit()
@@ -191,47 +211,61 @@ func _switch_turn():
 			current_player = PlayerState.EMPTY
 		PlayerState.PLAYER1:
 			current_player = PlayerState.PLAYER2
-			
-			if player1_timer.time_left > 0:
-				player1_time_remaining = player1_timer.time_left
-				
-			player1_timer.stop()
-			player2_timer.start(player2_time_remaining)
+			if player_timer_turned_on:
+				if player1_timer.time_left > 0:
+					player1_time_remaining = player1_timer.time_left
+					
+				player1_timer.stop()
+				player2_timer.start(player2_time_remaining)
 		PlayerState.PLAYER2:
 			current_player = PlayerState.PLAYER1
-			
-			if player2_timer.time_left > 0:
-				player2_time_remaining = player2_timer.time_left
-				
-			player2_timer.stop()
-			player1_timer.start(player1_time_remaining)
+			if player_timer_turned_on:
+				if player2_timer.time_left > 0:
+					player2_time_remaining = player2_timer.time_left
+					
+				player2_timer.stop()
+				player1_timer.start(player1_time_remaining)
+	
 	turn_changed.emit()
 
 func _on_player1_timeout():
-	if not is_game_ended():
-		return
-	
-	player2_timer.stop()
-	player_winner = PlayerState.PLAYER2
-	win.emit()
-	print("Player 1 has run out of time. Player 2 wins!")
+	if player_timer_turned_on:
+		if not is_game_ended():
+			return
+		
+		player2_timer.stop()
+		player_winner = PlayerState.PLAYER2
+		win.emit()
+		print("Player 1 has run out of time. Player 2 wins!")
 
 func _on_player2_timeout():
-	if not is_game_ended():
-		return
-	player1_timer.stop()
-	player_winner = PlayerState.PLAYER1
-	win.emit()
-	print("Player 2 has run out of time. Player 1 wins!")
+	if player_timer_turned_on:
+		if not is_game_ended():
+			return
+		player1_timer.stop()
+		player_winner = PlayerState.PLAYER1
+		win.emit()
+		print("Player 2 has run out of time. Player 1 wins!")
+	
+func _on_turn_changed():
+	if current_player == users["AI"]:
+		if player_winner != PlayerState.EMPTY:
+			return
+			
+		if drop_chip_timer.time_left > 0:
+			await drop_chip_timer.timeout
+			
+		var ai_move = ai_player.get_best_move(game_board, last_move)
+		drop_chip("AI", ai_move)
 
-func _win_matches_in_direction(board: Array, col: int, row: int, direction: Vector2i, player: PlayerState) -> Array:
+func _win_matches_in_direction(board: Array[Array], col: int, row: int, direction: Vector2i, player: PlayerState) -> Array:
 	var forward = _get_matches_in_direction(board, col, row, direction.y, direction.x, player)
 	var backward = _get_matches_in_direction(board, col, row, -direction.y, -direction.x, player)
 	backward.reverse()
 	var all_matches = backward + [Vector2i(row, col)] + forward
 	return all_matches
 
-func _get_matches_in_direction(board: Array, start_col: int, start_row: int, step_col: int, step_row: int, player: PlayerState) -> Array:
+func _get_matches_in_direction(board: Array[Array], start_col: int, start_row: int, step_col: int, step_row: int, player: PlayerState) -> Array:
 	var current_row = start_row + step_row
 	var current_col = start_col + step_col
 	var matches = []
@@ -245,7 +279,7 @@ func _get_matches_in_direction(board: Array, start_col: int, start_row: int, ste
 
 func _get_opponent_id(ai_player) -> String:
 	var version = ProjectSettings.get_setting("application/config/version")
-	return "AiPlayer_lvl" + str(ai_player.difficult) + "_v" + version
+	return "AiPlayer_lvl" + str(ai_difficlut) + "_v" + version
 
 func _save_game_stats():
 	if (player_winner != PlayerState.PLAYER1 and player_winner != PlayerState.PLAYER2 and 

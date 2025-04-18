@@ -15,21 +15,21 @@ uniform sampler2D SCREEN_TEXTURE:hint_screen_texture, filter_linear_mipmap;
 void fragment() {
     vec2 texel_size = vec2(1.0) / vec2(textureSize(SCREEN_TEXTURE, 0));
     float depth = texture(SCREEN_TEXTURE, SCREEN_UV).r;
-    
+
     bool edge_detected = false;
-    
+
     for (int x = -1; x <= 1; x++) {
         for (int y = -1; y <= 1; y++) {
             if (x == 0 && y == 0) continue;
-            
+
             float sample_depth = texture(SCREEN_TEXTURE, SCREEN_UV + vec2(float(x), float(y)) * texel_size * outline_width).r;
-            
+
             if (abs(depth - sample_depth) > depth_threshold) {
                 edge_detected = true;
             }
         }
     }
-    
+
     if (edge_detected) {
         ALBEDO = outline_color.rgb;
         ALPHA = outline_color.a;

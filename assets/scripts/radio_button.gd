@@ -34,7 +34,6 @@ func _on_press():
 	#_unpress_button_group()
 	connect4.set_user_player(player)
 	connect4.start.emit()
-	connect4.is_game_started = true
 
 func _unpress_button_group():
 	var group = self.button_group.get_buttons()

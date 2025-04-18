@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="SpawnConfig" load_steps=3 format=3 uid="uid://d0n8bq4b2tik1"]
 
 [ext_resource type="PackedScene" uid="uid://dnh214qltuh3l" path="res://nodes/chip.tscn" id="1_hvwuf"]
-[ext_resource type="Script" path="res://assets/scripts/spawnconfig.gd" id="2_khw2c"]
+[ext_resource type="Script" uid="uid://bo7h4abbxl22f" path="res://assets/scripts/spawnconfig.gd" id="2_khw2c"]
 
 [resource]
 script = ExtResource("2_khw2c")

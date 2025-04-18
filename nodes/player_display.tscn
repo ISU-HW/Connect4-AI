@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=3 uid="uid://cycny62yykefs"]
 
-[ext_resource type="Shader" path="res://assets/shaders/hue.gdshader" id="1_kv7h3"]
+[ext_resource type="Shader" uid="uid://d3bb1jiloy2xw" path="res://assets/shaders/hue.gdshader" id="1_kv7h3"]
 [ext_resource type="Texture2D" uid="uid://chofco3dg6wc5" path="res://assets/png/rounded_patch2.png" id="2_nphiy"]
 [ext_resource type="FontFile" uid="uid://bdili7ia2pkur" path="res://assets/fonts/Homenaje-Regular.ttf" id="4_0k384"]
 [ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="4_godv3"]
@@ -75,21 +75,25 @@ func _ready():
 	connect4.turn_changed.connect(update_timer_text)
 
 func update_timer_text() -> void:
-	var time_remaining = get_time_remaining()
-	
-	var minutes = int(time_remaining / 60.0)
-	var seconds = int(time_remaining) % 60
-	var milliseconds = int(snapped(fmod(time_remaining, 1), 0.01) * 100)
-	
-	var minutes_str = \"0\" + str(minutes) if minutes < 10 else str(minutes)
-	var seconds_str = \"0\" + str(seconds) if seconds < 10 else str(seconds)
-	var milliseconds_str = str(milliseconds).pad_zeros(2)
-	
-	self.text = template.format({
-		\"minutes\": minutes_str,
-		\"seconds\": seconds_str,
-		\"milliseconds\": milliseconds_str,
-	})
+	if connect4.player_timer_turned_on:
+		self.show()
+		var time_remaining = get_time_remaining()
+		
+		var minutes = int(time_remaining / 60.0)
+		var seconds = int(time_remaining) % 60
+		var milliseconds = int(snapped(fmod(time_remaining, 1), 0.01) * 100)
+		
+		var minutes_str = \"0\" + str(minutes) if minutes < 10 else str(minutes)
+		var seconds_str = \"0\" + str(seconds) if seconds < 10 else str(seconds)
+		var milliseconds_str = str(milliseconds).pad_zeros(2)
+		
+		self.text = template.format({
+			\"minutes\": minutes_str,
+			\"seconds\": seconds_str,
+			\"milliseconds\": milliseconds_str,
+		})
+	else:
+		self.hide()
 
 func get_time_remaining() -> float:
 	if connect4.current_player == connect4.PlayerState.PLAYER1:
@@ -113,7 +117,7 @@ shader = ExtResource("1_kv7h3")
 shader_parameter/from = Color(0, 0, 0, 1)
 shader_parameter/to = Color(0.382, 0.382, 0.382, 1)
 shader_parameter/alpha = 1.0
-shader_parameter/tolerance = null
+shader_parameter/tolerance = 0.0
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_fwube"]
 blend_mode = 2
@@ -135,7 +139,7 @@ func _ready() -> void:
 	
 func _on_start():
 	self.text = template.format({
-		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI \" + \" Level \" + str(ai_player.difficult),
+		\"user_player\": \"Player\" if connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER1 and player_display == connect4.PlayerState.PLAYER1 or connect4.users[\"PLAYER\"] == connect4.PlayerState.PLAYER2 and player_display == connect4.PlayerState.PLAYER2 else \"AI \" + \" Level \" + str(connect4.ai_difficlut),
 	})
 "
 

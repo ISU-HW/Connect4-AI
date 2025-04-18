@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bai6jmk2kbbud"]
 
 [ext_resource type="Texture2D" uid="uid://chbvg8bodxpip" path="res://assets/png/chip_picture_multicolor.png" id="1_l8cq5"]
-[ext_resource type="Script" path="res://assets/scripts/radio_button.gd" id="2_y54md"]
+[ext_resource type="Script" uid="uid://dtuspjo7bpeuq" path="res://assets/scripts/radio_button.gd" id="2_y54md"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1wfyl"]
 

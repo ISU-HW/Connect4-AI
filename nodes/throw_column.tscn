@@ -1,11 +1,11 @@
 [gd_scene load_steps=10 format=3 uid="uid://ljmcy4ce44ww"]
 
-[ext_resource type="Script" path="res://assets/scripts/columnboard_clickbox.gd" id="1_evvlw"]
-[ext_resource type="Script" path="res://assets/scripts/spawnpoint.gd" id="2_s3s0n"]
+[ext_resource type="Script" uid="uid://b3t8mslj16lf5" path="res://assets/scripts/columnboard_clickbox.gd" id="1_evvlw"]
+[ext_resource type="Script" uid="uid://cosuhnd6wfnmu" path="res://assets/scripts/spawnpoint.gd" id="2_s3s0n"]
 [ext_resource type="Resource" uid="uid://bu6myuscb43x1" path="res://assets/tres/spawnconfig_PLAYER1.tres" id="4_58cys"]
-[ext_resource type="Script" path="res://assets/scripts/spawnconfig.gd" id="4_eppt7"]
+[ext_resource type="Script" uid="uid://bo7h4abbxl22f" path="res://assets/scripts/spawnconfig.gd" id="4_eppt7"]
 [ext_resource type="Resource" uid="uid://d0n8bq4b2tik1" path="res://assets/tres/spawnconfig_PLAYER2.tres" id="5_17m3e"]
-[ext_resource type="Script" path="res://assets/scripts/throw_column_box.gd" id="6_vev8j"]
+[ext_resource type="Script" uid="uid://b0lhc3ptual7l" path="res://assets/scripts/throw_column_box.gd" id="6_vev8j"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_dxmu4"]
 size = Vector3(1.6, 10.5, 1)

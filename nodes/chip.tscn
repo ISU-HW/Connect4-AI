@@ -1,14 +1,15 @@
 [gd_scene load_steps=21 format=4 uid="uid://dnh214qltuh3l"]
 
-[ext_resource type="Script" path="res://assets/scripts/chip.gd" id="1_1j851"]
+[ext_resource type="Script" uid="uid://b65t3o1udiyy3" path="res://assets/scripts/chip.gd" id="1_1j851"]
 [ext_resource type="Material" uid="uid://bgeor1mkhbxo7" path="res://assets/tres/pirate_piece.tres" id="2_wrcwk"]
 [ext_resource type="ArrayMesh" uid="uid://uh7x1ulikhhp" path="res://assets/models/piece.obj" id="3_tc2k1"]
-[ext_resource type="Shader" path="res://addons/flexible_toon_shader/flexible_toon.gdshader" id="4_6dvrv"]
+[ext_resource type="Shader" uid="uid://jajwk13ihu4c" path="res://addons/flexible_toon_shader/flexible_toon.gdshader" id="4_6dvrv"]
 [ext_resource type="AudioStream" uid="uid://b0mbt3agsc7y1" path="res://assets/wav/drop_piece.wav" id="5_csh3l"]
 [ext_resource type="Material" uid="uid://ba6pmgm18cv5h" path="res://assets/tres/win_stars.tres" id="6_8lcln"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_okij4"]
-bounce = 0.2
+rough = true
+bounce = 0.1
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_ev57g"]
 _surfaces = [{
@@ -104,6 +105,7 @@ emission_ring_axis = Vector3(0, 0, 1)
 emission_ring_height = 0.0
 emission_ring_radius = 0.2
 emission_ring_inner_radius = 0.2
+emission_ring_cone_angle = 90.0
 spread = 0.0
 gravity = Vector3(0, 0, 0)
 radial_accel_min = -2.23517e-06
@@ -124,6 +126,7 @@ emission_ring_axis = Vector3(0, 0, 0)
 emission_ring_height = 0.0
 emission_ring_radius = 0.3
 emission_ring_inner_radius = 0.3
+emission_ring_cone_angle = 90.0
 spread = 0.0
 gravity = Vector3(0, 0, 0)
 linear_accel_min = -2.2
