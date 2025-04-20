@@ -206,6 +206,58 @@ func _on_checkbox_toggled(is_checked):
 font = ExtResource("12_jkivn")
 font_size = 22
 
+[sub_resource type="GDScript" id="GDScript_d86i3"]
+script/source = "extends VBoxContainer
+
+func _ready() -> void:
+	connect4.win.connect(_on_end)
+	connect4.draw.connect(_on_end)
+	
+	visible = false
+	
+	if not InputMap.has_action(\"cycle_ai_player_debug_menu\"):
+		InputMap.add_action(\"cycle_ai_player_debug_menu\")
+		var event := InputEventKey.new()
+		event.keycode = KEY_F2
+		InputMap.action_add_event(\"cycle_ai_player_debug_menu\", event)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and InputMap.has_action(\"cycle_ai_player_debug_menu\") and event.is_action_pressed(\"cycle_ai_player_debug_menu\"):
+		visible = not visible
+
+func _on_end():
+	InputMap.erase_action(\"cycle_ai_player_debug_menu\")
+	#visible = false
+"
+
+[sub_resource type="LabelSettings" id="LabelSettings_wkdv3"]
+font = ExtResource("12_jkivn")
+font_size = 20
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_f88j5"]
+font = ExtResource("12_jkivn")
+font_size = 20
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 1)
+
+[sub_resource type="GDScript" id="GDScript_hxbf1"]
+script/source = "extends Label
+
+var template: String = self.text
+	
+func _ready():
+	connect4.ai_player.move_calculation_started.connect(_on_move_calculation_started)
+	
+func _on_move_calculation_started():
+	visible = false
+
+func _on_graph_tree_visualizer_performance_stats_updated(stats: Dictionary) -> void:
+	visible = true
+	self.text = self.template % [stats.nodes_explored, stats.nodes_pruned, stats.calculation_time, stats.max_depth]
+"
+
 [sub_resource type="GDScript" id="GDScript_b86cp"]
 script/source = "extends Control
 
@@ -392,58 +444,6 @@ func _on_end():
 	for move in connect4.move_history:
 		history += move + \" → \" if move != connect4.move_history[connect4.move_history.size() - 1] else move
 	self.text += history
-"
-
-[sub_resource type="GDScript" id="GDScript_d86i3"]
-script/source = "extends VBoxContainer
-
-func _ready() -> void:
-	connect4.win.connect(_on_end)
-	connect4.draw.connect(_on_end)
-	
-	visible = false
-	
-	if not InputMap.has_action(\"cycle_ai_player_debug_menu\"):
-		InputMap.add_action(\"cycle_ai_player_debug_menu\")
-		var event := InputEventKey.new()
-		event.keycode = KEY_F2
-		InputMap.action_add_event(\"cycle_ai_player_debug_menu\", event)
-
-func _input(event: InputEvent) -> void:
-	if event is InputEventKey and InputMap.has_action(\"cycle_ai_player_debug_menu\") and event.is_action_pressed(\"cycle_ai_player_debug_menu\"):
-		visible = not visible
-
-func _on_end():
-	InputMap.erase_action(\"cycle_ai_player_debug_menu\")
-	#visible = false
-"
-
-[sub_resource type="LabelSettings" id="LabelSettings_wkdv3"]
-font = ExtResource("12_jkivn")
-font_size = 20
-shadow_size = 2
-shadow_color = Color(0, 0, 0, 1)
-
-[sub_resource type="LabelSettings" id="LabelSettings_f88j5"]
-font = ExtResource("12_jkivn")
-font_size = 20
-shadow_size = 2
-shadow_color = Color(0, 0, 0, 1)
-
-[sub_resource type="GDScript" id="GDScript_hxbf1"]
-script/source = "extends Label
-
-var template: String = self.text
-	
-func _ready():
-	connect4.ai_player.move_calculation_started.connect(_on_move_calculation_started)
-	
-func _on_move_calculation_started():
-	visible = false
-
-func _on_graph_tree_visualizer_performance_stats_updated(stats: Dictionary) -> void:
-	visible = true
-	self.text = self.template % [stats.nodes_explored, stats.nodes_pruned, stats.calculation_time, stats.max_depth]
 "
 
 [node name="Main" type="Node3D"]
@@ -716,6 +716,114 @@ max_value = 600.0
 value = 120.0
 suffix = "s"
 
+[node name="visualizer_menu" type="VBoxContainer" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -300.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 2
+script = SubResource("GDScript_d86i3")
+
+[node name="gui" type="HBoxContainer" parent="visualizer_menu"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.15
+
+[node name="1" type="HSplitContainer" parent="visualizer_menu/gui"]
+layout_mode = 2
+size_flags_horizontal = 3
+dragger_visibility = 2
+
+[node name="show_pruned_nodes" type="CheckButton" parent="visualizer_menu/gui/1"]
+layout_mode = 2
+button_pressed = true
+
+[node name="Label" type="Label" parent="visualizer_menu/gui/1"]
+layout_mode = 2
+text = "Show Pruned"
+label_settings = SubResource("LabelSettings_wkdv3")
+
+[node name="2" type="HSplitContainer" parent="visualizer_menu/gui"]
+layout_mode = 2
+size_flags_horizontal = 3
+dragger_visibility = 2
+
+[node name="show_values" type="CheckButton" parent="visualizer_menu/gui/2"]
+layout_mode = 2
+button_pressed = true
+
+[node name="Label" type="Label" parent="visualizer_menu/gui/2"]
+layout_mode = 2
+text = "Show Values"
+label_settings = SubResource("LabelSettings_wkdv3")
+
+[node name="3" type="HSplitContainer" parent="visualizer_menu/gui"]
+layout_mode = 2
+size_flags_horizontal = 3
+dragger_visibility = 2
+
+[node name="show_calculation" type="CheckButton" parent="visualizer_menu/gui/3"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="visualizer_menu/gui/3"]
+layout_mode = 2
+text = "Show Calculation"
+label_settings = SubResource("LabelSettings_wkdv3")
+
+[node name="Label" type="Label" parent="visualizer_menu/gui"]
+layout_mode = 2
+text = "   || Nodes: %d | Pruned: %d | Time: %.3fs | Depth: %d ||   "
+label_settings = SubResource("LabelSettings_f88j5")
+script = SubResource("GDScript_hxbf1")
+
+[node name="content" type="Panel" parent="visualizer_menu"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="GraphTreeVisualizer" type="ReferenceRect" parent="visualizer_menu/content"]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.99, 0.95)
+script = ExtResource("16_mtlyc")
+
+[node name="VScrollBar" type="VScrollBar" parent="visualizer_menu/content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -8.0
+offset_right = -2.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 2
+size_flags_horizontal = 8
+max_value = 1.0
+page = 1.0
+
+[node name="HScrollBar" type="HScrollBar" parent="visualizer_menu/content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -8.0
+offset_right = -10.0
+offset_bottom = -2.0
+grow_horizontal = 2
+grow_vertical = 0
+max_value = 1.0
+page = 1.0
+
 [node name="win_menu" type="Control" parent="."]
 visible = false
 layout_mode = 3
@@ -864,113 +972,6 @@ text = "P1 → P2 → "
 label_settings = SubResource("LabelSettings_nuud5")
 autowrap_mode = 2
 script = SubResource("GDScript_w2sle")
-
-[node name="visualizer_menu" type="VBoxContainer" parent="."]
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -300.0
-grow_horizontal = 2
-grow_vertical = 0
-alignment = 2
-script = SubResource("GDScript_d86i3")
-
-[node name="gui" type="HBoxContainer" parent="visualizer_menu"]
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 3
-size_flags_stretch_ratio = 0.15
-
-[node name="1" type="HSplitContainer" parent="visualizer_menu/gui"]
-layout_mode = 2
-size_flags_horizontal = 3
-dragger_visibility = 2
-
-[node name="show_pruned_nodes" type="CheckButton" parent="visualizer_menu/gui/1"]
-layout_mode = 2
-button_pressed = true
-
-[node name="Label" type="Label" parent="visualizer_menu/gui/1"]
-layout_mode = 2
-text = "Show Pruned"
-label_settings = SubResource("LabelSettings_wkdv3")
-
-[node name="2" type="HSplitContainer" parent="visualizer_menu/gui"]
-layout_mode = 2
-size_flags_horizontal = 3
-dragger_visibility = 2
-
-[node name="show_values" type="CheckButton" parent="visualizer_menu/gui/2"]
-layout_mode = 2
-button_pressed = true
-
-[node name="Label" type="Label" parent="visualizer_menu/gui/2"]
-layout_mode = 2
-text = "Show Values"
-label_settings = SubResource("LabelSettings_wkdv3")
-
-[node name="3" type="HSplitContainer" parent="visualizer_menu/gui"]
-layout_mode = 2
-size_flags_horizontal = 3
-dragger_visibility = 2
-
-[node name="show_calculation" type="CheckButton" parent="visualizer_menu/gui/3"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="visualizer_menu/gui/3"]
-layout_mode = 2
-text = "Show Calculation"
-label_settings = SubResource("LabelSettings_wkdv3")
-
-[node name="Label" type="Label" parent="visualizer_menu/gui"]
-layout_mode = 2
-text = "   || Nodes: %d | Pruned: %d | Time: %.3fs | Depth: %d ||   "
-label_settings = SubResource("LabelSettings_f88j5")
-script = SubResource("GDScript_hxbf1")
-
-[node name="content" type="Panel" parent="visualizer_menu"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="GraphTreeVisualizer" type="ReferenceRect" parent="visualizer_menu/content"]
-clip_contents = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("16_mtlyc")
-
-[node name="VScrollBar" type="VScrollBar" parent="visualizer_menu/content"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -8.0
-offset_right = -2.0
-offset_bottom = -10.0
-grow_horizontal = 0
-grow_vertical = 2
-size_flags_horizontal = 8
-max_value = 1.0
-page = 1.0
-
-[node name="HScrollBar" type="HScrollBar" parent="visualizer_menu/content"]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -8.0
-offset_right = -10.0
-offset_bottom = -2.0
-grow_horizontal = 2
-grow_vertical = 0
-max_value = 1.0
-page = 1.0
 
 [node name="Debug menu" parent="." instance=ExtResource("6_fliiy")]
 
