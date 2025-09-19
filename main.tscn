@@ -209,25 +209,86 @@ font_size = 22
 [sub_resource type="GDScript" id="GDScript_d86i3"]
 script/source = "extends VBoxContainer
 
+# Подключение к существующим UI элементам из сцены
+@onready var show_pruned_checkbox: CheckButton = $\"gui/1/show_pruned_nodes\"
+@onready var show_values_checkbox: CheckButton = $\"gui/2/show_values\"
+@onready var show_calculation_checkbox: CheckButton = $\"gui/3/show_calculation\"
+
+# Ссылка на визуализатор (из content)
+@onready var graph_visualizer: GraphVisualizationTree = get_node(\"./content/GraphTreeVisualizer\")
+@onready var v_scrollbar: VScrollBar = get_node(\"./content/VScrollBar\")
+@onready var h_scrollbar: HScrollBar = get_node(\"./content/HScrollBar\")
+
 func _ready() -> void:
-	connect4.win.connect(_on_end)
-	connect4.draw.connect(_on_end)
+	connect4.win.connect(_on_game_end)
+	connect4.draw.connect(_on_game_end)
 	
 	visible = false
 	
+	# Настройка горячей клавиши F2
 	if not InputMap.has_action(\"cycle_ai_player_debug_menu\"):
 		InputMap.add_action(\"cycle_ai_player_debug_menu\")
 		var event := InputEventKey.new()
 		event.keycode = KEY_F2
 		InputMap.action_add_event(\"cycle_ai_player_debug_menu\", event)
+	
+	# Подключаем только существующие чекбоксы
+	_connect_existing_checkboxes()
+
+func _connect_existing_checkboxes() -> void:
+	if show_pruned_checkbox:
+		show_pruned_checkbox.toggled.connect(_on_show_pruned_toggled)
+		show_pruned_checkbox.button_pressed = true
+		print(\"Подключен чекбокс отсеченных узлов\")
+	
+	if show_values_checkbox:
+		show_values_checkbox.toggled.connect(_on_show_values_toggled)
+		show_values_checkbox.button_pressed = true
+		print(\"Подключен чекбокс значений узлов\")
+	
+	if show_calculation_checkbox:
+		show_calculation_checkbox.toggled.connect(_on_show_calculation_toggled)
+		show_calculation_checkbox.button_pressed = false
+		print(\"Подключен чекбокс вычислений\")
+	
+	if not graph_visualizer:
+		print(\"ОШИБКА: GraphVisualizationTree не найден!\")
+	else:
+		print(\"GraphVisualizationTree найден\")
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and InputMap.has_action(\"cycle_ai_player_debug_menu\") and event.is_action_pressed(\"cycle_ai_player_debug_menu\"):
 		visible = not visible
+		print(\"Визуализатор \", \"показан\" if visible else \"скрыт\")
 
-func _on_end():
-	InputMap.erase_action(\"cycle_ai_player_debug_menu\")
-	#visible = false
+func _on_game_end():
+	pass
+
+# ==================== ОБРАБОТЧИКИ ЧЕКБОКСОВ ====================
+
+func _on_show_pruned_toggled(enabled: bool) -> void:
+	print(\"Отображение отсеченных узлов: \", enabled)
+	if graph_visualizer:
+		graph_visualizer.show_pruned_nodes = enabled
+		graph_visualizer.layout_dirty = true
+		graph_visualizer.queue_redraw()
+
+func _on_show_values_toggled(enabled: bool) -> void:
+	print(\"Отображение значений узлов: \", enabled)
+	if graph_visualizer:
+		graph_visualizer.show_values = enabled
+		graph_visualizer.queue_redraw()
+
+func _on_show_calculation_toggled(enabled: bool) -> void:
+	print(\"Отображение текущих вычислений: \", enabled)
+	if graph_visualizer:
+		graph_visualizer.show_calculation = enabled
+		graph_visualizer.layout_dirty = true
+		graph_visualizer.queue_redraw()
+
+func _exit_tree() -> void:
+	if InputMap.has_action(\"cycle_ai_player_debug_menu\"):
+		InputMap.erase_action(\"cycle_ai_player_debug_menu\")
 "
 
 [sub_resource type="LabelSettings" id="LabelSettings_wkdv3"]
@@ -556,7 +617,7 @@ color = Color(0.3, 0.3, 0.3, 0.501961)
 hover_color = Color(0.3, 0.3, 0.3, 1)
 
 [node name="Label" type="Label" parent="help"]
-layout_mode = 2
+layout_mode = 0
 offset_left = 16.0
 offset_top = 9.0
 offset_right = 254.0
